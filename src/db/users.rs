@@ -61,15 +61,51 @@ pub async fn get_user_by_id(pool: &SqlitePool, id: &str) -> AppResult<Option<Use
     Ok(user)
 }
 
+/// Look up a user by email address.
+pub async fn get_user_by_email(pool: &SqlitePool, email: &str) -> AppResult<Option<User>> {
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = ?")
+        .bind(email)
+        .fetch_optional(pool)
+        .await?;
+    Ok(user)
+}
+
+/// Reset a user's password by hashing the new password and updating the DB.
+pub async fn reset_password(
+    pool: &SqlitePool,
+    username: &str,
+    new_password: &str,
+) -> AppResult<()> {
+    let hash = hash_password(new_password)?;
+    let rows = sqlx::query("UPDATE users SET password_hash = ? WHERE username = ?")
+        .bind(&hash)
+        .bind(username)
+        .execute(pool)
+        .await?
+        .rows_affected();
+    if rows == 0 {
+        Err(AppError::Internal(anyhow::anyhow!(
+            "User '{username}' not found"
+        )))
+    } else {
+        Ok(())
+    }
+}
+
 /// Verify a password against a user's stored hash. Returns the user if valid.
+/// Accepts either username or email as the login identifier.
 pub async fn verify_user(
     pool: &SqlitePool,
     username: &str,
     password: &str,
 ) -> AppResult<Option<User>> {
+    // Try by username first, then by email
     let user = match get_user_by_username(pool, username).await? {
         Some(u) => u,
-        None => return Ok(None),
+        None => match get_user_by_email(pool, username).await? {
+            Some(u) => u,
+            None => return Ok(None),
+        },
     };
 
     if verify_password(password, &user.password_hash)? {

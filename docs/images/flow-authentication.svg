@@ -1,0 +1,447 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1000" width="1100" height="1000">
+  <defs>
+    <style>
+      .title { font: bold 20px sans-serif; fill: #333; }
+      .col-title { font: bold 14px sans-serif; fill: #555; text-anchor: middle; }
+      .col-sub { font: 11px sans-serif; fill: #888; text-anchor: middle; }
+      .node-text { font: bold 12px sans-serif; fill: #fff; text-anchor: middle; }
+      .node-sub { font: 10px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+      .decision-text { font: bold 11px sans-serif; fill: #fff; text-anchor: middle; }
+      .decision-sub { font: 9px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+      .label-text { font: bold 11px sans-serif; fill: #444; }
+      .yes-label { font: bold 11px sans-serif; fill: #2d6a4f; }
+      .no-label { font: bold 11px sans-serif; fill: #c1292e; }
+      .note-text { font: italic 9px sans-serif; fill: #666; text-anchor: middle; }
+      .arrow { stroke: #444; stroke-width: 1.8; marker-end: url(#arrowhead); }
+      .arrow-yes { stroke: #2d6a4f; stroke-width: 1.8; marker-end: url(#arrowhead-yes); }
+      .arrow-no { stroke: #c1292e; stroke-width: 1.8; marker-end: url(#arrowhead-no); }
+    </style>
+
+    <!-- Arrowhead markers -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#444"/>
+    </marker>
+    <marker id="arrowhead-yes" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2d6a4f"/>
+    </marker>
+    <marker id="arrowhead-no" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#c1292e"/>
+    </marker>
+
+    <!-- Drop shadow -->
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.15"/>
+    </filter>
+
+    <!-- Node gradients -->
+    <linearGradient id="startGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5a9fd4"/>
+      <stop offset="100%" stop-color="#4a90d9"/>
+    </linearGradient>
+    <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6b9def"/>
+      <stop offset="100%" stop-color="#5b8def"/>
+    </linearGradient>
+    <linearGradient id="decisionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f0a14a"/>
+      <stop offset="100%" stop-color="#e8913a"/>
+    </linearGradient>
+    <linearGradient id="endGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2ebd6a"/>
+      <stop offset="100%" stop-color="#27ae60"/>
+    </linearGradient>
+    <linearGradient id="errorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f05c4c"/>
+      <stop offset="100%" stop-color="#e74c3c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="1000" fill="#fafbfc" rx="8"/>
+
+  <!-- Title -->
+  <text x="550" y="32" class="title" text-anchor="middle">Authentication Strategies</text>
+
+  <!-- Column divider lines -->
+  <line x1="367" y1="42" x2="367" y2="905" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="6,4"/>
+  <line x1="733" y1="42" x2="733" y2="905" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="6,4"/>
+
+  <!-- Column headers -->
+  <text x="183" y="58" class="col-title">inline_auth</text>
+  <text x="183" y="73" class="col-sub">CalDAV - strict</text>
+
+  <text x="550" y="58" class="col-title">auth_or_path_user</text>
+  <text x="550" y="73" class="col-sub">CalDAV - flexible</text>
+
+  <text x="917" y="58" class="col-title">require_bearer_auth</text>
+  <text x="917" y="73" class="col-sub">MCP - middleware</text>
+
+  <!-- ============================================================ -->
+  <!-- COLUMN 1: inline_auth (center x=183)                         -->
+  <!-- ============================================================ -->
+
+  <!-- C1: START ellipse (cy=105) -->
+  <ellipse cx="183" cy="105" rx="80" ry="22" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="183" y="110" class="node-text">Request Arrives</text>
+
+  <!-- Arrow: START -> Decision 1 -->
+  <line x1="183" y1="127" x2="183" y2="160" class="arrow"/>
+
+  <!-- C1: Decision 1 - Has Authorization header? (cy=195, dy=35, dx=85) -->
+  <!-- top=160, bottom=230, left=98, right=268 -->
+  <polygon points="183,160 268,195 183,230 98,195" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="183" y="192" class="decision-text">Has Auth</text>
+  <text x="183" y="203" class="decision-text">header?</text>
+
+  <!-- No arrow: left vertex (98,195) -> 401 error box -->
+  <path d="M98,195 L40,195 L40,250" class="arrow-no" fill="none"/>
+  <text x="80" y="188" class="no-label">No</text>
+
+  <!-- C1: Error - Return 401 -->
+  <rect x="5" y="250" width="70" height="48" rx="6" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="40" y="269" class="node-text" style="font-size:10px">401</text>
+  <text x="40" y="282" class="node-sub" style="font-size:8px">WWW-Auth:</text>
+  <text x="40" y="292" class="node-sub" style="font-size:8px">Basic "caldav"</text>
+
+  <!-- Yes arrow: bottom vertex (183,230) -> Process: Decode Base64 -->
+  <line x1="183" y1="230" x2="183" y2="270" class="arrow-yes"/>
+  <text x="193" y="247" class="yes-label">Yes</text>
+
+  <!-- C1: Process - Decode Base64 -->
+  <rect x="108" y="270" width="150" height="36" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="183" y="284" class="node-text">Decode Base64</text>
+  <text x="183" y="297" class="node-sub">from "Basic {enc}"</text>
+
+  <!-- Arrow: Decode -> Split -->
+  <line x1="183" y1="306" x2="183" y2="330" class="arrow"/>
+
+  <!-- C1: Process - Split on ":" -->
+  <rect x="108" y="330" width="150" height="36" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="183" y="344" class="node-text">Split on ":"</text>
+  <text x="183" y="357" class="node-sub">username:password</text>
+
+  <!-- Arrow: Split -> Look up user -->
+  <line x1="183" y1="366" x2="183" y2="390" class="arrow"/>
+
+  <!-- C1: Process - Look up user -->
+  <rect x="108" y="390" width="150" height="36" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="183" y="404" class="node-text">Look Up User</text>
+  <text x="183" y="417" class="node-sub">by username in DB</text>
+
+  <!-- Arrow: Look up -> Decision: User found? -->
+  <line x1="183" y1="426" x2="183" y2="460" class="arrow"/>
+
+  <!-- C1: Decision 2 - User found? (cy=495, dy=35, dx=85) -->
+  <!-- top=460, bottom=530, left=98, right=268 -->
+  <polygon points="183,460 268,495 183,530 98,495" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="183" y="498" class="decision-text">User</text>
+  <text x="183" y="509" class="decision-sub">found?</text>
+
+  <!-- No arrow: left vertex (98,495) -> 401 -->
+  <path d="M98,495 L40,495 L40,298" class="arrow-no" fill="none"/>
+  <text x="80" y="488" class="no-label">No</text>
+
+  <!-- Yes arrow: bottom vertex (183,530) -> Verify password -->
+  <line x1="183" y1="530" x2="183" y2="560" class="arrow-yes"/>
+  <text x="193" y="547" class="yes-label">Yes</text>
+
+  <!-- C1: Process - Verify password with Argon2id -->
+  <rect x="98" y="560" width="170" height="36" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="183" y="574" class="node-text">Verify Password</text>
+  <text x="183" y="587" class="node-sub">Argon2id hash check</text>
+
+  <!-- Arrow: Verify -> Decision: Password matches? -->
+  <line x1="183" y1="596" x2="183" y2="630" class="arrow"/>
+
+  <!-- C1: Decision 3 - Password matches? (cy=665, dy=35, dx=85) -->
+  <!-- top=630, bottom=700, left=98, right=268 -->
+  <polygon points="183,630 268,665 183,700 98,665" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="183" y="662" class="decision-text">Password</text>
+  <text x="183" y="673" class="decision-text">matches?</text>
+
+  <!-- No arrow: left vertex (98,665) -> 401 -->
+  <path d="M98,665 L28,665 L28,298" class="arrow-no" fill="none"/>
+  <text x="80" y="658" class="no-label">No</text>
+
+  <!-- Yes arrow: bottom vertex (183,700) -> Return User -->
+  <line x1="183" y1="700" x2="183" y2="740" class="arrow-yes"/>
+  <text x="193" y="717" class="yes-label">Yes</text>
+
+  <!-- C1: End - Return authenticated User -->
+  <rect x="98" y="740" width="170" height="48" rx="6" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="183" y="759" class="node-text">Return User</text>
+  <text x="183" y="773" class="node-sub">Authenticated - continue</text>
+  <text x="183" y="783" class="node-sub">to handler</text>
+
+  <!-- ============================================================ -->
+  <!-- COLUMN 2: auth_or_path_user (center x=550)                   -->
+  <!-- ============================================================ -->
+
+  <!-- C2: START ellipse (cy=105) -->
+  <ellipse cx="550" cy="105" rx="80" ry="22" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="550" y="100" class="node-text" style="font-size:10px">Request Arrives</text>
+  <text x="550" y="113" class="node-sub" style="font-size:9px">/caldav/users/{user}/*</text>
+
+  <!-- Arrow: START -> Decision 1 -->
+  <line x1="550" y1="127" x2="550" y2="160" class="arrow"/>
+
+  <!-- C2: Decision 1 - Has Authorization header? (cy=195, dy=35, dx=85) -->
+  <!-- top=160, bottom=230, left=465, right=635 -->
+  <polygon points="550,160 635,195 550,230 465,195" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="550" y="192" class="decision-text">Has Auth</text>
+  <text x="550" y="203" class="decision-text">header?</text>
+
+  <!-- Yes arrow: left vertex (465,195) -> Process: decode + verify (same as inline_auth) -->
+  <path d="M465,195 L395,195 L395,270" class="arrow-yes" fill="none"/>
+  <text x="447" y="188" class="yes-label">Yes</text>
+
+  <!-- C2: Process - Decode + Verify (Basic Auth) -->
+  <rect x="375" y="270" width="150" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="450" y="288" class="node-text">Basic Auth Flow</text>
+  <text x="450" y="301" class="node-sub">Decode, look up user,</text>
+  <text x="450" y="312" class="node-sub">verify Argon2id</text>
+
+  <!-- Arrow from Basic Auth -> Decision: Valid? -->
+  <line x1="450" y1="318" x2="450" y2="355" class="arrow"/>
+
+  <!-- C2: Decision - Valid credentials? (cy=390, dy=35, dx=75) -->
+  <!-- top=355, bottom=425, left=375, right=525 -->
+  <polygon points="450,355 525,390 450,425 375,390" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="450" y="387" class="decision-text">Valid</text>
+  <text x="450" y="398" class="decision-text">creds?</text>
+
+  <!-- No arrow from Valid? -> 401 -->
+  <path d="M375,390 L375,435" class="arrow-no" fill="none"/>
+  <text x="382" y="413" class="no-label">No</text>
+
+  <!-- 401 error for bad creds in column 2 -->
+  <rect x="340" y="435" width="70" height="36" rx="6" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="375" y="449" class="node-text" style="font-size:10px">401</text>
+  <text x="375" y="462" class="node-sub" style="font-size:8px">Unauthorized</text>
+
+  <!-- Yes arrow from Valid? -> merge point, route left around right-side nodes -->
+  <path d="M450,425 L450,530 L462,530" class="arrow-yes" fill="none"/>
+  <text x="457" y="442" class="yes-label">Yes</text>
+
+  <!-- No arrow (no auth header): bottom vertex (550,230) -> Process: Extract username from URL -->
+  <line x1="550" y1="230" x2="555" y2="270" class="arrow"/>
+  <text x="563" y="247" class="no-label">No</text>
+
+  <!-- C2: Process - Extract username from URL path -->
+  <rect x="480" y="270" width="155" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="557" y="288" class="node-text">Extract {username}</text>
+  <text x="557" y="301" class="node-sub">from URL path</text>
+  <text x="557" y="312" class="node-sub">parameter</text>
+
+  <!-- Arrow: Extract -> Look up user -->
+  <line x1="557" y1="318" x2="557" y2="355" class="arrow"/>
+
+  <!-- C2: Process - Look up user in DB (no password check) -->
+  <rect x="480" y="355" width="155" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="557" y="372" class="node-text">Look Up User</text>
+  <text x="557" y="385" class="node-sub">by username in DB</text>
+  <text x="557" y="396" class="node-sub">NO password check</text>
+
+  <!-- Arrow: Look up -> Decision: User found? -->
+  <line x1="557" y1="403" x2="557" y2="440" class="arrow"/>
+
+  <!-- C2: Decision - User found? (cy=475, dy=35, dx=80) -->
+  <!-- top=440, bottom=510, left=477, right=637 -->
+  <polygon points="557,440 637,475 557,510 477,475" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="557" y="472" class="decision-text">User</text>
+  <text x="557" y="483" class="decision-sub">found?</text>
+
+  <!-- No arrow: right vertex (637,475) -> 401 -->
+  <path d="M637,475 L690,475 L690,435" class="arrow-no" fill="none"/>
+  <text x="652" y="468" class="no-label">No</text>
+
+  <!-- 401 error for user not found in column 2 path fallback -->
+  <rect x="655" y="399" width="70" height="36" rx="6" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="690" y="413" class="node-text" style="font-size:10px">401</text>
+  <text x="690" y="426" class="node-sub" style="font-size:8px">Unauthorized</text>
+
+  <!-- Yes arrow: bottom vertex (557,510) -> merge point -->
+  <line x1="557" y1="510" x2="557" y2="530" class="arrow-yes"/>
+  <text x="567" y="524" class="yes-label">Yes</text>
+
+  <!-- Merge point: both Yes paths join here (invisible) -->
+  <!-- Left Yes path arrived at (462,530), Right Yes path at (557,530) -->
+  <!-- Both continue down to Verify Calendar -->
+
+  <!-- Merge arrow from left (auth yes) to Verify Calendar top -->
+  <path d="M462,530 L520,530 L520,550" class="arrow-yes" fill="none"/>
+  <!-- Merge arrow from right (path yes) to Verify Calendar top -->
+  <line x1="557" y1="530" x2="557" y2="550" class="arrow"/>
+
+  <!-- C2: Note box about ownership verification -->
+  <rect x="475" y="550" width="160" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="555" y="567" class="node-text" style="font-size:10px">Verify Calendar</text>
+  <text x="555" y="580" class="node-sub">Ownership checked</text>
+  <text x="555" y="591" class="node-sub">after auth resolves</text>
+
+  <!-- Arrow to Decision: Owns calendar? -->
+  <line x1="555" y1="598" x2="555" y2="630" class="arrow"/>
+
+  <!-- C2: Decision - Owns calendar? (cy=665, dy=35, dx=80) -->
+  <!-- top=630, bottom=700, left=475, right=635 -->
+  <polygon points="555,630 635,665 555,700 475,665" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="555" y="662" class="decision-text">Calendar</text>
+  <text x="555" y="673" class="decision-text">access?</text>
+
+  <!-- No arrow: right vertex (635,665) -> 403 -->
+  <path d="M635,665 L690,665 L690,630" class="arrow-no" fill="none"/>
+  <text x="650" y="658" class="no-label">No</text>
+
+  <!-- 403 error -->
+  <rect x="655" y="594" width="70" height="36" rx="6" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="690" y="608" class="node-text" style="font-size:10px">403</text>
+  <text x="690" y="621" class="node-sub" style="font-size:8px">Forbidden</text>
+
+  <!-- Yes arrow: bottom vertex (555,700) -> Return User -->
+  <line x1="555" y1="700" x2="555" y2="740" class="arrow-yes"/>
+  <text x="565" y="717" class="yes-label">Yes</text>
+
+  <!-- C2: End - Return User -->
+  <rect x="475" y="740" width="160" height="48" rx="6" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="555" y="759" class="node-text">Return User</text>
+  <text x="555" y="773" class="node-sub">Continue to handler</text>
+
+  <!-- ============================================================ -->
+  <!-- COLUMN 3: require_bearer_auth (center x=917)                  -->
+  <!-- ============================================================ -->
+
+  <!-- C3: START ellipse (cy=105) -->
+  <ellipse cx="917" cy="105" rx="80" ry="22" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="917" y="100" class="node-text" style="font-size:10px">Request Arrives</text>
+  <text x="917" y="113" class="node-sub" style="font-size:9px">at /mcp</text>
+
+  <!-- Arrow: START -> Decision 1 -->
+  <line x1="917" y1="127" x2="917" y2="160" class="arrow"/>
+
+  <!-- C3: Decision 1 - Has "Bearer " header? (cy=195, dy=35, dx=90) -->
+  <!-- top=160, bottom=230, left=827, right=1007 -->
+  <polygon points="917,160 1007,195 917,230 827,195" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="917" y="189" class="decision-text">Has</text>
+  <text x="917" y="200" class="decision-text">"Bearer "?</text>
+
+  <!-- No arrow: right vertex (1007,195) -> 401 -->
+  <line x1="1007" y1="195" x2="1047" y2="195" class="arrow-no"/>
+  <text x="1015" y="188" class="no-label">No</text>
+
+  <!-- 401 error for missing bearer -->
+  <rect x="1050" y="177" width="40" height="36" rx="6" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="1070" y="196" class="node-text" style="font-size:10px">401</text>
+
+  <!-- Yes arrow: bottom vertex (917,230) -> Extract token -->
+  <line x1="917" y1="230" x2="917" y2="270" class="arrow-yes"/>
+  <text x="927" y="247" class="yes-label">Yes</text>
+
+  <!-- C3: Process - Extract token string -->
+  <rect x="837" y="270" width="160" height="36" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="917" y="284" class="node-text">Extract Token</text>
+  <text x="917" y="297" class="node-sub">strip "Bearer " prefix</text>
+
+  <!-- Arrow: Extract -> Query tokens -->
+  <line x1="917" y1="306" x2="917" y2="340" class="arrow"/>
+
+  <!-- C3: Process - Query all mcp_tokens from DB -->
+  <rect x="837" y="340" width="160" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="917" y="358" class="node-text">Query Tokens</text>
+  <text x="917" y="371" class="node-sub">all non-expired</text>
+  <text x="917" y="382" class="node-sub">mcp_tokens from DB</text>
+
+  <!-- Arrow: Query -> Verify loop -->
+  <line x1="917" y1="388" x2="917" y2="422" class="arrow"/>
+
+  <!-- C3: Process - For each token, verify Argon2id -->
+  <rect x="837" y="422" width="160" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="917" y="440" class="node-text">Verify Hashes</text>
+  <text x="917" y="453" class="node-sub">for each token, check</text>
+  <text x="917" y="464" class="node-sub">Argon2id hash match</text>
+
+  <!-- Arrow: Verify -> Decision: Any match? -->
+  <line x1="917" y1="470" x2="917" y2="510" class="arrow"/>
+
+  <!-- C3: Decision - Any token matches? (cy=545, dy=35, dx=85) -->
+  <!-- top=510, bottom=580, left=832, right=1002 -->
+  <polygon points="917,510 1002,545 917,580 832,545" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="917" y="542" class="decision-text">Any token</text>
+  <text x="917" y="553" class="decision-text">matches?</text>
+
+  <!-- No arrow: right vertex (1002,545) -> 401 -->
+  <line x1="1002" y1="545" x2="1047" y2="545" class="arrow-no"/>
+  <text x="1015" y="538" class="no-label">No</text>
+
+  <!-- 401 error for no match -->
+  <rect x="1050" y="527" width="40" height="36" rx="6" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="1070" y="546" class="node-text" style="font-size:10px">401</text>
+
+  <!-- Yes arrow: bottom vertex (917,580) -> Extract user_id -->
+  <line x1="917" y1="580" x2="917" y2="620" class="arrow-yes"/>
+  <text x="927" y="597" class="yes-label">Yes</text>
+
+  <!-- C3: Process - Extract user_id from matching token -->
+  <rect x="837" y="620" width="160" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="917" y="638" class="node-text">Extract user_id</text>
+  <text x="917" y="651" class="node-sub">from matching token</text>
+  <text x="917" y="662" class="node-sub">record</text>
+
+  <!-- Arrow: Extract user_id -> Insert into extensions -->
+  <line x1="917" y1="668" x2="917" y2="702" class="arrow"/>
+
+  <!-- C3: Process - Insert into request extensions -->
+  <rect x="837" y="702" width="160" height="36" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="917" y="716" class="node-text">Set Extensions</text>
+  <text x="917" y="729" class="node-sub">insert McpUserId</text>
+
+  <!-- Arrow: Extensions -> Continue to handler -->
+  <line x1="917" y1="738" x2="917" y2="766" class="arrow"/>
+
+  <!-- C3: End - Continue to handler -->
+  <rect x="837" y="766" width="160" height="36" rx="6" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="917" y="780" class="node-text">Continue</text>
+  <text x="917" y="793" class="node-sub">to MCP handler</text>
+
+  <!-- ============================================================ -->
+  <!-- LEGEND                                                        -->
+  <!-- ============================================================ -->
+  <g transform="translate(30, 910)">
+    <text x="0" y="0" class="label-text" style="font-size:13px">Legend</text>
+
+    <!-- Start terminal -->
+    <ellipse cx="25" cy="25" rx="20" ry="12" fill="url(#startGrad)"/>
+    <text x="55" y="30" class="label-text">Start</text>
+
+    <!-- Decision -->
+    <polygon points="25,50 40,62 25,74 10,62" fill="url(#decisionGrad)"/>
+    <text x="55" y="67" class="label-text">Decision</text>
+
+    <!-- Process -->
+    <rect x="5" y="82" width="40" height="16" rx="4" fill="url(#processGrad)"/>
+    <text x="55" y="95" class="label-text">Process</text>
+
+    <!-- Success -->
+    <rect x="145" y="17" width="40" height="16" rx="4" fill="url(#endGrad)"/>
+    <text x="195" y="30" class="label-text">Success</text>
+
+    <!-- Error -->
+    <rect x="145" y="49" width="40" height="16" rx="4" fill="url(#errorGrad)"/>
+    <text x="195" y="62" class="label-text">Error response</text>
+
+    <!-- Arrow types -->
+    <line x1="370" y1="25" x2="420" y2="25" class="arrow"/>
+    <text x="430" y="30" class="label-text">Main flow</text>
+
+    <line x1="370" y1="55" x2="420" y2="55" class="arrow-yes"/>
+    <text x="430" y="60" class="yes-label">Yes / success</text>
+
+    <line x1="370" y1="85" x2="420" y2="85" class="arrow-no"/>
+    <text x="430" y="90" class="no-label">No / failure</text>
+
+    <!-- Port info -->
+    <text x="620" y="30" class="label-text">CalDAV port: 5232 (Columns 1-2)</text>
+    <text x="620" y="50" class="label-text">MCP port: 5233 (Column 3)</text>
+    <text x="620" y="75" class="note-text" style="text-anchor:start;font-size:10px">Column 2 path fallback: anyone with a valid</text>
+    <text x="620" y="87" class="note-text" style="text-anchor:start;font-size:10px">username can access calendars without credentials</text>
+  </g>
+</svg>

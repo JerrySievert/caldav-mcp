@@ -1,6 +1,6 @@
 use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::Writer;
-use std::io::Cursor;
+use std::io::{Cursor, Write};
 
 /// Builder for WebDAV multistatus XML responses.
 pub struct MultistatusBuilder {
@@ -91,13 +91,12 @@ impl MultistatusBuilder {
                             .unwrap();
                     }
                     PropContent::Xml(xml) => {
+                        // Write the entire element as raw XML to avoid
+                        // Writer buffer/cursor desync when injecting fragments.
+                        let raw = format!("<{prefixed}>{xml}</{prefixed}>");
                         self.writer
-                            .write_event(Event::Start(BytesStart::new(&prefixed)))
-                            .unwrap();
-                        // Write raw XML fragment
-                        self.writer.get_mut().get_mut().extend_from_slice(xml.as_bytes());
-                        self.writer
-                            .write_event(Event::End(BytesEnd::new(&prefixed)))
+                            .get_mut()
+                            .write_all(raw.as_bytes())
                             .unwrap();
                     }
                     PropContent::Empty => {

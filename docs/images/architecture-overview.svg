@@ -1,0 +1,235 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 750" width="1100" height="750">
+  <defs>
+    <style>
+      .title { font: bold 20px sans-serif; fill: #333; }
+      .subtitle { font: italic 13px sans-serif; fill: #666; }
+      .component-label { font: bold 13px sans-serif; fill: #fff; text-anchor: middle; }
+      .component-sub { font: 11px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+      .component-detail { font: 10px sans-serif; fill: rgba(255,255,255,0.75); text-anchor: middle; }
+      .group-label { font: bold 14px sans-serif; fill: #444; }
+      .conn-label { font: 11px sans-serif; fill: #555; }
+      .legend-label { font: 11px sans-serif; fill: #555; }
+      .arrow { stroke: #555; stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+      .arrow-dashed { stroke: #888; stroke-width: 1.5; stroke-dasharray: 6,3; fill: none;
+                      marker-end: url(#arrowhead-gray); }
+      .arrow-bidir { stroke: #555; stroke-width: 1.5; fill: none;
+                     marker-start: url(#arrowhead-rev); marker-end: url(#arrowhead); }
+    </style>
+
+    <!-- Arrowhead markers -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+    </marker>
+    <marker id="arrowhead-rev" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto">
+      <polygon points="10 0, 0 3.5, 10 7" fill="#555"/>
+    </marker>
+    <marker id="arrowhead-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#888"/>
+    </marker>
+
+    <!-- Drop shadow -->
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.12"/>
+    </filter>
+
+    <!-- Component gradients -->
+    <linearGradient id="serviceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6b9def"/>
+      <stop offset="100%" stop-color="#5b8def"/>
+    </linearGradient>
+    <linearGradient id="dbGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6bc785"/>
+      <stop offset="100%" stop-color="#5ab870"/>
+    </linearGradient>
+    <linearGradient id="externalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#b07de8"/>
+      <stop offset="100%" stop-color="#9b6dd0"/>
+    </linearGradient>
+    <linearGradient id="queueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f0a14a"/>
+      <stop offset="100%" stop-color="#e8913a"/>
+    </linearGradient>
+    <linearGradient id="cacheGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e06070"/>
+      <stop offset="100%" stop-color="#d04050"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="750" fill="#fafbfc" rx="8"/>
+
+  <!-- Title -->
+  <text x="550" y="35" class="title" text-anchor="middle">CalDAV Server - System Architecture</text>
+  <text x="550" y="52" class="subtitle" text-anchor="middle">Rust / Axum -- SQLite -- RFC 4791 CalDAV + MCP Integration</text>
+
+  <!-- ============================================================ -->
+  <!-- CLIENTS GROUP (Top Row) -->
+  <!-- ============================================================ -->
+  <rect x="40" y="70" width="1020" height="110" rx="10" fill="none"
+        stroke="#bbb" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="52" y="88" class="group-label">Clients</text>
+
+  <!-- Apple Calendar -->
+  <rect x="100" y="105" width="200" height="55" rx="8" fill="url(#externalGrad)"
+        filter="url(#shadow)" stroke="#fff" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="200" y="128" class="component-label">Apple Calendar</text>
+  <text x="200" y="144" class="component-sub">macOS / iOS</text>
+
+  <!-- CalDAV Client -->
+  <rect x="450" y="105" width="200" height="55" rx="8" fill="url(#externalGrad)"
+        filter="url(#shadow)" stroke="#fff" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="550" y="128" class="component-label">CalDAV Client</text>
+  <text x="550" y="144" class="component-sub">Thunderbird / DAVx5 / etc.</text>
+
+  <!-- MCP Client -->
+  <rect x="800" y="105" width="200" height="55" rx="8" fill="url(#externalGrad)"
+        filter="url(#shadow)" stroke="#fff" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="900" y="128" class="component-label">MCP Client</text>
+  <text x="900" y="144" class="component-sub">AI Tools / Claude Code</text>
+
+  <!-- ============================================================ -->
+  <!-- SERVER GROUP (Middle) -->
+  <!-- ============================================================ -->
+  <rect x="40" y="230" width="1020" height="240" rx="10" fill="none"
+        stroke="#bbb" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="52" y="248" class="group-label">Server Layer</text>
+
+  <!-- CalDAV Server -->
+  <rect x="70" y="270" width="480" height="180" rx="8" fill="url(#serviceGrad)"
+        filter="url(#shadow)"/>
+  <text x="310" y="295" class="component-label">CalDAV Server</text>
+  <text x="310" y="312" class="component-sub">Port 5232 -- HTTP Basic Auth</text>
+
+  <!-- CalDAV sub-components -->
+  <rect x="90" y="325" width="130" height="36" rx="5" fill="rgba(255,255,255,0.18)"/>
+  <text x="155" y="341" class="component-detail">Discovery</text>
+  <text x="155" y="353" class="component-detail">.well-known + OPTIONS</text>
+
+  <rect x="230" y="325" width="130" height="36" rx="5" fill="rgba(255,255,255,0.18)"/>
+  <text x="295" y="341" class="component-detail">PROPFIND</text>
+  <text x="295" y="353" class="component-detail">Collection listing</text>
+
+  <rect x="370" y="325" width="160" height="36" rx="5" fill="rgba(255,255,255,0.18)"/>
+  <text x="450" y="341" class="component-detail">PUT / GET / DELETE</text>
+  <text x="450" y="353" class="component-detail">Event CRUD</text>
+
+  <rect x="90" y="370" width="130" height="36" rx="5" fill="rgba(255,255,255,0.18)"/>
+  <text x="155" y="386" class="component-detail">REPORT</text>
+  <text x="155" y="398" class="component-detail">multiget / query / sync</text>
+
+  <rect x="230" y="370" width="130" height="36" rx="5" fill="rgba(255,255,255,0.18)"/>
+  <text x="295" y="386" class="component-detail">MKCALENDAR</text>
+  <text x="295" y="398" class="component-detail">Create collections</text>
+
+  <rect x="370" y="370" width="160" height="36" rx="5" fill="rgba(255,255,255,0.18)"/>
+  <text x="450" y="386" class="component-detail">PROPPATCH</text>
+  <text x="450" y="398" class="component-detail">Update properties</text>
+
+  <!-- MCP Server -->
+  <rect x="590" y="270" width="440" height="180" rx="8" fill="url(#serviceGrad)"
+        filter="url(#shadow)"/>
+  <text x="810" y="295" class="component-label">MCP Server</text>
+  <text x="810" y="312" class="component-sub">Port 5233 -- Bearer Token Auth</text>
+
+  <!-- MCP sub-components -->
+  <rect x="610" y="325" width="190" height="36" rx="5" fill="rgba(255,255,255,0.18)"/>
+  <text x="705" y="341" class="component-detail">JSON-RPC 2.0 Transport</text>
+  <text x="705" y="353" class="component-detail">Streamable HTTP</text>
+
+  <rect x="810" y="325" width="200" height="36" rx="5" fill="rgba(255,255,255,0.18)"/>
+  <text x="910" y="341" class="component-detail">Session Management</text>
+  <text x="910" y="353" class="component-detail">Token validation (Argon2id)</text>
+
+  <rect x="610" y="370" width="130" height="36" rx="5" fill="rgba(255,255,255,0.18)"/>
+  <text x="675" y="386" class="component-detail">Calendar Tools (4)</text>
+  <text x="675" y="398" class="component-detail">list / get / create / delete</text>
+
+  <rect x="750" y="370" width="130" height="36" rx="5" fill="rgba(255,255,255,0.18)"/>
+  <text x="815" y="386" class="component-detail">Event Tools (5)</text>
+  <text x="815" y="398" class="component-detail">CRUD + query</text>
+
+  <rect x="890" y="370" width="120" height="36" rx="5" fill="rgba(255,255,255,0.18)"/>
+  <text x="950" y="386" class="component-detail">Sharing Tools (3)</text>
+  <text x="950" y="398" class="component-detail">share / unshare / list</text>
+
+  <!-- ============================================================ -->
+  <!-- DATA LAYER GROUP (Bottom) -->
+  <!-- ============================================================ -->
+  <rect x="40" y="520" width="1020" height="170" rx="10" fill="none"
+        stroke="#bbb" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="52" y="538" class="group-label">Data Layer</text>
+
+  <!-- SQLite Database (cylinder) -->
+  <g filter="url(#shadow)">
+    <ellipse cx="310" cy="568" rx="140" ry="16" fill="url(#dbGrad)"/>
+    <rect x="170" y="568" width="280" height="80" fill="url(#dbGrad)"/>
+    <ellipse cx="310" cy="648" rx="140" ry="16" fill="url(#dbGrad)"/>
+    <ellipse cx="310" cy="568" rx="140" ry="16" fill="url(#dbGrad)" opacity="0.3"/>
+  </g>
+  <text x="310" y="596" class="component-label">SQLite Database</text>
+  <text x="310" y="612" class="component-sub">users, calendars, calendar_objects</text>
+  <text x="310" y="626" class="component-sub">calendar_shares, sync_changes, mcp_tokens</text>
+
+  <!-- iCal Storage -->
+  <g filter="url(#shadow)">
+    <ellipse cx="780" cy="575" rx="120" ry="14" fill="url(#dbGrad)"/>
+    <rect x="660" y="575" width="240" height="55" fill="url(#dbGrad)"/>
+    <ellipse cx="780" cy="630" rx="120" ry="14" fill="url(#dbGrad)"/>
+    <ellipse cx="780" cy="575" rx="120" ry="14" fill="url(#dbGrad)" opacity="0.3"/>
+  </g>
+  <text x="780" y="600" class="component-label">iCal Storage</text>
+  <text x="780" y="616" class="component-sub">Raw .ics in ical_data column</text>
+
+  <!-- ============================================================ -->
+  <!-- CONNECTIONS -->
+  <!-- ============================================================ -->
+
+  <!-- Apple Calendar -> CalDAV Server -->
+  <path d="M 200,160 L 200,195 L 250,195 L 250,270" class="arrow"/>
+  <text x="140" y="215" class="conn-label">HTTP Basic Auth</text>
+  <text x="140" y="228" class="conn-label">CalDAV (RFC 4791)</text>
+
+  <!-- CalDAV Client -> CalDAV Server -->
+  <path d="M 550,160 L 550,195 L 380,195 L 380,270" class="arrow"/>
+  <text x="470" y="193" class="conn-label">HTTP Basic Auth / CalDAV</text>
+
+  <!-- MCP Client -> MCP Server -->
+  <path d="M 900,160 L 900,195 L 850,195 L 850,270" class="arrow"/>
+  <text x="945" y="193" class="conn-label">Bearer Token</text>
+  <text x="945" y="206" class="conn-label">JSON-RPC 2.0</text>
+
+  <!-- CalDAV Server -> SQLite -->
+  <path d="M 260,450 L 260,490 L 280,490 L 280,560" class="arrow"/>
+  <text x="200" y="505" class="conn-label">sqlx async queries</text>
+
+  <!-- MCP Server -> SQLite -->
+  <path d="M 750,450 L 750,490 L 370,490 L 370,560" class="arrow"/>
+  <text x="570" y="505" class="conn-label">sqlx async queries</text>
+
+  <!-- CalDAV Server <-> iCal Storage -->
+  <path d="M 450,450 L 450,500 L 780,500 L 780,568" class="arrow-bidir"/>
+  <text x="615" y="518" class="conn-label">Parse / Build .ics</text>
+
+  <!-- ============================================================ -->
+  <!-- LEGEND -->
+  <!-- ============================================================ -->
+  <g transform="translate(40, 710)">
+    <text x="0" y="0" class="group-label">Legend:</text>
+
+    <rect x="65" y="-11" width="18" height="14" rx="3" fill="url(#externalGrad)"
+          stroke="#fff" stroke-width="0.5" stroke-dasharray="3,1"/>
+    <text x="90" y="2" class="legend-label">External Client</text>
+
+    <rect x="205" y="-11" width="18" height="14" rx="3" fill="url(#serviceGrad)"/>
+    <text x="230" y="2" class="legend-label">Internal Service</text>
+
+    <rect x="345" y="-11" width="18" height="14" rx="3" fill="url(#dbGrad)"/>
+    <text x="370" y="2" class="legend-label">Database / Storage</text>
+
+    <line x1="505" y1="-4" x2="535" y2="-4" class="arrow"/>
+    <text x="543" y="2" class="legend-label">Data Flow</text>
+
+    <line x1="620" y1="-4" x2="650" y2="-4" class="arrow-bidir"/>
+    <text x="658" y="2" class="legend-label">Bidirectional</text>
+  </g>
+</svg>

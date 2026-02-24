@@ -1,0 +1,275 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 850" width="600" height="850">
+  <defs>
+    <style>
+      .title { font: bold 20px sans-serif; fill: #333; }
+      .node-text { font: bold 12px sans-serif; fill: #fff; text-anchor: middle; }
+      .node-sub { font: 10px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+      .decision-text { font: bold 11px sans-serif; fill: #fff; text-anchor: middle; }
+      .label-text { font: bold 11px sans-serif; fill: #444; }
+      .yes-label { font: bold 11px sans-serif; fill: #2d6a4f; }
+      .no-label { font: bold 11px sans-serif; fill: #c1292e; }
+      .arrow { stroke: #444; stroke-width: 1.8; marker-end: url(#arrowhead); }
+      .arrow-yes { stroke: #2d6a4f; stroke-width: 1.8; marker-end: url(#arrowhead-yes); }
+      .arrow-no { stroke: #c1292e; stroke-width: 1.8; marker-end: url(#arrowhead-no); }
+    </style>
+
+    <!-- Arrowhead markers -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#444"/>
+    </marker>
+    <marker id="arrowhead-yes" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2d6a4f"/>
+    </marker>
+    <marker id="arrowhead-no" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#c1292e"/>
+    </marker>
+
+    <!-- Drop shadow -->
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.15"/>
+    </filter>
+
+    <!-- Node gradients -->
+    <linearGradient id="startGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5a9fd4"/>
+      <stop offset="100%" stop-color="#4a90d9"/>
+    </linearGradient>
+    <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6b9def"/>
+      <stop offset="100%" stop-color="#5b8def"/>
+    </linearGradient>
+    <linearGradient id="decisionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f0a14a"/>
+      <stop offset="100%" stop-color="#e8913a"/>
+    </linearGradient>
+    <linearGradient id="endGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2ebd6a"/>
+      <stop offset="100%" stop-color="#27ae60"/>
+    </linearGradient>
+    <linearGradient id="errorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f05c4c"/>
+      <stop offset="100%" stop-color="#e74c3c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="600" height="850" fill="#fafbfc" rx="8"/>
+
+  <!-- Title -->
+  <text x="300" y="32" class="title" text-anchor="middle">PROPPATCH Flow</text>
+
+  <!-- ============================================================ -->
+  <!-- START: PROPPATCH Request -->
+  <!-- cx=240, cy=66, rx=140, ry=24  top=42, bottom=90 -->
+  <!-- ============================================================ -->
+  <ellipse cx="240" cy="66" rx="140" ry="24" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="240" y="64" class="node-text">PROPPATCH Request</text>
+  <text x="240" y="77" class="node-sub">/caldav/users/{username}/{calendar_id}/</text>
+
+  <!-- Arrow: START bottom -> Decision 1 top -->
+  <!-- START bottom=90, Decision1 top=100 -->
+  <line x1="240" y1="90" x2="240" y2="100" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- DECISION 1: Is method OPTIONS? -->
+  <!-- cx=240, cy=133, DX=90, DY=33  top=100, bottom=166, left=150, right=330 -->
+  <!-- ============================================================ -->
+  <polygon points="240,100 330,133 240,166 150,133" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="240" y="131" class="decision-text">Is method</text>
+  <text x="240" y="143" class="decision-text">OPTIONS?</text>
+
+  <!-- Yes branch: right vertex (330,133) -> Return 200 rect -->
+  <!-- Return 200: x=390, y=117, w=170, h=32  left=390 -->
+  <line x1="330" y1="133" x2="387" y2="133" class="arrow-yes"/>
+  <text x="345" y="127" class="yes-label">Yes</text>
+
+  <rect x="390" y="117" width="170" height="32" rx="6" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="475" y="137" class="node-text">200 + DAV Headers</text>
+
+  <!-- No branch: bottom vertex (240,166) -> Process auth -->
+  <text x="255" y="178" class="no-label">No</text>
+
+  <!-- Arrow: Decision 1 bottom -> Process auth top -->
+  <!-- Decision1 bottom=166, auth top=190 -->
+  <line x1="240" y1="166" x2="240" y2="190" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- PROCESS: Call auth_or_path_user -->
+  <!-- x=130, y=190, w=220, h=32  bottom=222 -->
+  <!-- ============================================================ -->
+  <rect x="130" y="190" width="220" height="32" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="240" y="210" class="node-text">Call auth_or_path_user</text>
+
+  <!-- Arrow: auth bottom -> Decision 2 top -->
+  <!-- auth bottom=222, Decision2 top=240 -->
+  <line x1="240" y1="222" x2="240" y2="240" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- DECISION 2: User resolved? -->
+  <!-- cx=240, cy=273, DX=90, DY=33  top=240, bottom=306, left=150, right=330 -->
+  <!-- ============================================================ -->
+  <polygon points="240,240 330,273 240,306 150,273" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="240" y="277" class="decision-text">User resolved?</text>
+
+  <!-- No branch: right vertex (330,273) -> Return 401 -->
+  <!-- Return 401: x=390, y=257, w=170, h=32  left=390 -->
+  <line x1="330" y1="273" x2="387" y2="273" class="arrow-no"/>
+  <text x="345" y="267" class="no-label">No</text>
+
+  <rect x="390" y="257" width="170" height="32" rx="6" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="475" y="277" class="node-text">401 Unauthorized</text>
+
+  <!-- Yes branch: bottom vertex (240,306) -> Process lookup -->
+  <text x="255" y="318" class="yes-label">Yes</text>
+
+  <!-- Arrow: Decision 2 bottom -> Process lookup top -->
+  <!-- Decision2 bottom=306, lookup top=330 -->
+  <line x1="240" y1="306" x2="240" y2="330" class="arrow-yes"/>
+
+  <!-- ============================================================ -->
+  <!-- PROCESS: Look up calendar -->
+  <!-- x=105, y=330, w=270, h=32  bottom=362 -->
+  <!-- ============================================================ -->
+  <rect x="105" y="330" width="270" height="32" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="240" y="350" class="node-text">Look up calendar by {calendar_id}</text>
+
+  <!-- Arrow: lookup bottom -> Decision 3 top -->
+  <!-- lookup bottom=362, Decision3 top=380 -->
+  <line x1="240" y1="362" x2="240" y2="380" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- DECISION 3: Calendar exists and user is owner? -->
+  <!-- cx=240, cy=413, DX=100, DY=33  top=380, bottom=446, left=140, right=340 -->
+  <!-- ============================================================ -->
+  <polygon points="240,380 340,413 240,446 140,413" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="240" y="411" class="decision-text">Calendar exists</text>
+  <text x="240" y="423" class="decision-text">and user is owner?</text>
+
+  <!-- No branch: right vertex (340,413) -> Return 403 -->
+  <!-- Return 403: x=400, y=397, w=170, h=32  left=400 -->
+  <line x1="340" y1="413" x2="397" y2="413" class="arrow-no"/>
+  <text x="355" y="407" class="no-label">No</text>
+
+  <rect x="400" y="397" width="170" height="32" rx="6" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="485" y="417" class="node-text">403 Forbidden</text>
+
+  <!-- Yes branch: bottom vertex (240,446) -> Process parse XML -->
+  <text x="255" y="458" class="yes-label">Yes</text>
+
+  <!-- Arrow: Decision 3 bottom -> Process parse XML top -->
+  <!-- Decision3 bottom=446, parseXML top=468 -->
+  <line x1="240" y1="446" x2="240" y2="468" class="arrow-yes"/>
+
+  <!-- ============================================================ -->
+  <!-- PROCESS: Parse XML body -->
+  <!-- x=80, y=468, w=320, h=32  bottom=500 -->
+  <!-- ============================================================ -->
+  <rect x="80" y="468" width="320" height="32" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="240" y="488" class="node-text">Parse XML body for &lt;D:propertyupdate&gt;</text>
+
+  <!-- Arrow: parseXML bottom -> extract props top -->
+  <!-- parseXML bottom=500, extractProps top=518 -->
+  <line x1="240" y1="500" x2="240" y2="518" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- PROCESS: Extract properties to update -->
+  <!-- x=80, y=518, w=320, h=60  bottom=578 -->
+  <!-- ============================================================ -->
+  <rect x="80" y="518" width="320" height="60" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="240" y="536" class="node-text">Extract properties to update:</text>
+  <text x="240" y="552" class="node-sub">displayname</text>
+  <text x="240" y="564" class="node-sub">calendar-description (C:) | calendar-color (Apple:)</text>
+
+  <!-- Arrow: extractProps bottom -> updateDB top -->
+  <!-- extractProps bottom=578, updateDB top=596 -->
+  <line x1="240" y1="578" x2="240" y2="596" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- PROCESS: Update calendar in database -->
+  <!-- x=80, y=596, w=320, h=32  bottom=628 -->
+  <!-- ============================================================ -->
+  <rect x="80" y="596" width="320" height="32" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="240" y="616" class="node-text">Update calendar in database with new values</text>
+
+  <!-- Arrow: updateDB bottom -> bumpCtag top -->
+  <!-- updateDB bottom=628, bumpCtag top=646 -->
+  <line x1="240" y1="628" x2="240" y2="646" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- PROCESS: Bump calendar ctag -->
+  <!-- x=120, y=646, w=240, h=32  bottom=678 -->
+  <!-- ============================================================ -->
+  <rect x="120" y="646" width="240" height="32" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="240" y="666" class="node-text">Bump calendar ctag</text>
+
+  <!-- Arrow: bumpCtag bottom -> return 207 top -->
+  <!-- bumpCtag bottom=678, return207 top=700 -->
+  <line x1="240" y1="678" x2="240" y2="700" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- PROCESS: Return 207 Multi-Status -->
+  <!-- x=60, y=700, w=360, h=40  bottom=740 -->
+  <!-- ============================================================ -->
+  <rect x="60" y="700" width="360" height="40" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="240" y="717" class="node-text">Return 207 Multi-Status</text>
+  <text x="240" y="731" class="node-sub">with updated property statuses</text>
+
+  <!-- Arrow: return207 bottom -> END top -->
+  <!-- return207 bottom=740, END top=760 -->
+  <line x1="240" y1="740" x2="240" y2="760" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- END -->
+  <!-- cx=240, cy=782, rx=50, ry=22  top=760, bottom=804 -->
+  <!-- ============================================================ -->
+  <ellipse cx="240" cy="782" rx="50" ry="22" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="240" y="787" class="node-text">END</text>
+
+  <!-- ============================================================ -->
+  <!-- END ellipses for error/early-exit branches -->
+  <!-- ============================================================ -->
+
+  <!-- END for 200 + DAV Headers -->
+  <!-- 200 rect: x=390, y=117, w=170, h=32 -> right edge=560 -->
+  <!-- END ellipse at cx=475, cy=172, ry=18 -> top=154 -->
+  <line x1="475" y1="149" x2="475" y2="154" class="arrow"/>
+  <ellipse cx="475" cy="172" rx="40" ry="18" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="475" y="177" class="node-text">END</text>
+
+  <!-- END for 401 Unauthorized -->
+  <!-- 401 rect: x=390, y=257, w=170, h=32 -> bottom=289 -->
+  <!-- END ellipse at cx=475, cy=312, ry=18 -> top=294 -->
+  <line x1="475" y1="289" x2="475" y2="294" class="arrow"/>
+  <ellipse cx="475" cy="312" rx="40" ry="18" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="475" y="317" class="node-text">END</text>
+
+  <!-- END for 403 Forbidden -->
+  <!-- 403 rect: x=400, y=397, w=170, h=32 -> bottom=429 -->
+  <!-- END ellipse at cx=485, cy=452, ry=18 -> top=434 -->
+  <line x1="485" y1="429" x2="485" y2="434" class="arrow"/>
+  <ellipse cx="485" cy="452" rx="40" ry="18" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="485" y="457" class="node-text">END</text>
+
+  <!-- ============================================================ -->
+  <!-- LEGEND -->
+  <!-- ============================================================ -->
+  <g transform="translate(30, 830)">
+    <ellipse cx="10" cy="-4" rx="10" ry="7" fill="url(#startGrad)"/>
+    <text x="26" y="0" class="label-text">Start/End</text>
+
+    <rect x="105" y="-11" width="18" height="14" rx="3" fill="url(#processGrad)"/>
+    <text x="128" y="0" class="label-text">Process</text>
+
+    <polygon points="215,-11 225,-4 215,3 205,-4" fill="url(#decisionGrad)"/>
+    <text x="232" y="0" class="label-text">Decision</text>
+
+    <rect x="315" y="-11" width="18" height="14" rx="3" fill="url(#errorGrad)"/>
+    <text x="338" y="0" class="label-text">Error</text>
+
+    <line x1="395" y1="-4" x2="420" y2="-4" class="arrow-yes"/>
+    <text x="425" y="0" class="yes-label">Yes</text>
+
+    <line x1="465" y1="-4" x2="490" y2="-4" class="arrow-no"/>
+    <text x="495" y="0" class="no-label">No</text>
+  </g>
+</svg>

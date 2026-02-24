@@ -1,0 +1,391 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1500" width="1000" height="1500">
+  <defs>
+    <style>
+      .title { font: bold 20px sans-serif; fill: #333; }
+      .node-text { font: bold 12px sans-serif; fill: #fff; text-anchor: middle; }
+      .node-sub { font: 10px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+      .decision-text { font: bold 11px sans-serif; fill: #fff; text-anchor: middle; }
+      .decision-sub { font: 9px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+      .label-text { font: bold 11px sans-serif; fill: #444; }
+      .yes-label { font: bold 11px sans-serif; fill: #2d6a4f; }
+      .no-label { font: bold 11px sans-serif; fill: #c1292e; }
+      .branch-label { font: bold 12px sans-serif; fill: #555; text-anchor: middle; }
+      .arrow { stroke: #444; stroke-width: 1.8; marker-end: url(#arrowhead); }
+      .arrow-yes { stroke: #2d6a4f; stroke-width: 1.8; marker-end: url(#arrowhead-yes); }
+      .arrow-no { stroke: #c1292e; stroke-width: 1.8; marker-end: url(#arrowhead-no); }
+    </style>
+
+    <!-- Arrowhead markers -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#444"/>
+    </marker>
+    <marker id="arrowhead-yes" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2d6a4f"/>
+    </marker>
+    <marker id="arrowhead-no" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#c1292e"/>
+    </marker>
+
+    <!-- Drop shadow -->
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.15"/>
+    </filter>
+
+    <!-- Node gradients -->
+    <linearGradient id="startGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5a9fd4"/>
+      <stop offset="100%" stop-color="#4a90d9"/>
+    </linearGradient>
+    <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6b9def"/>
+      <stop offset="100%" stop-color="#5b8def"/>
+    </linearGradient>
+    <linearGradient id="decisionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f0a14a"/>
+      <stop offset="100%" stop-color="#e8913a"/>
+    </linearGradient>
+    <linearGradient id="endGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2ebd6a"/>
+      <stop offset="100%" stop-color="#27ae60"/>
+    </linearGradient>
+    <linearGradient id="errorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f05c4c"/>
+      <stop offset="100%" stop-color="#e74c3c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="1500" fill="#fafbfc" rx="8"/>
+
+  <!-- Title -->
+  <text x="500" y="35" class="title" text-anchor="middle">REPORT Flow (Multiget, Query, Sync-Collection)</text>
+
+  <!-- ============================================================ -->
+  <!-- START: REPORT Request  (ellipse, cy=80) -->
+  <!-- bottom = 106 -->
+  <!-- ============================================================ -->
+  <ellipse cx="500" cy="80" rx="130" ry="26" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="500" y="78" class="node-text">REPORT Request</text>
+  <text x="500" y="91" class="node-sub">/caldav/users/{user}/{cal_id}/</text>
+
+  <!-- Arrow: START bottom (500,106) -> Process auth top (500,140) -->
+  <line x1="500" y1="106" x2="500" y2="140" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- PROCESS: auth_or_path_user  (y=140, h=48) -->
+  <!-- bottom = 188 -->
+  <!-- ============================================================ -->
+  <rect x="370" y="140" width="260" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="500" y="161" class="node-text">Call auth_or_path_user</text>
+  <text x="500" y="175" class="node-sub">Try HTTP Basic Auth, fallback to path username</text>
+
+  <!-- Arrow: Process bottom (500,188) -> Decision 1 top (500,222) -->
+  <line x1="500" y1="188" x2="500" y2="222" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- DECISION 1: User resolved?  (cy=262, dy=40, dx=100) -->
+  <!-- top=222, bottom=302, left=400, right=600 -->
+  <!-- ============================================================ -->
+  <polygon points="500,222 600,262 500,302 400,262" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="500" y="259" class="decision-text">User</text>
+  <text x="500" y="271" class="decision-text">resolved?</text>
+
+  <!-- No arrow: right vertex (600,262) -> Error: 401 -->
+  <line x1="600" y1="262" x2="747" y2="262" class="arrow-no"/>
+  <text x="618" y="255" class="no-label">No</text>
+
+  <!-- Error: 401 Unauthorized -->
+  <rect x="750" y="244" width="190" height="36" rx="6" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="845" y="259" class="node-text">Return 401</text>
+  <text x="845" y="272" class="node-sub">Unauthorized</text>
+
+  <!-- Yes arrow: bottom vertex (500,302) -> Process calendar lookup top (500,338) -->
+  <line x1="500" y1="302" x2="500" y2="338" class="arrow-yes"/>
+  <text x="512" y="318" class="yes-label">Yes</text>
+
+  <!-- ============================================================ -->
+  <!-- PROCESS: Look up calendar  (y=338, h=36) -->
+  <!-- bottom = 374 -->
+  <!-- ============================================================ -->
+  <rect x="375" y="338" width="250" height="36" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="500" y="360" class="node-text">Look up calendar by {calendar_id}</text>
+
+  <!-- Arrow: Process bottom (500,374) -> Decision 2 top (500,408) -->
+  <line x1="500" y1="374" x2="500" y2="408" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- DECISION 2: Calendar belongs to user?  (cy=448, dy=40, dx=110) -->
+  <!-- top=408, bottom=488, left=390, right=610 -->
+  <!-- ============================================================ -->
+  <polygon points="500,408 610,448 500,488 390,448" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="500" y="443" class="decision-text">Calendar belongs</text>
+  <text x="500" y="455" class="decision-text">to user?</text>
+
+  <!-- No arrow: right vertex (610,448) -> Error: 403 -->
+  <line x1="610" y1="448" x2="747" y2="448" class="arrow-no"/>
+  <text x="628" y="441" class="no-label">No</text>
+
+  <!-- Error: 403 Forbidden -->
+  <rect x="750" y="430" width="190" height="36" rx="6" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="845" y="445" class="node-text">Return 403</text>
+  <text x="845" y="458" class="node-sub">Forbidden</text>
+
+  <!-- Yes arrow: bottom vertex (500,488) -> Process parse XML top (500,524) -->
+  <line x1="500" y1="488" x2="500" y2="524" class="arrow-yes"/>
+  <text x="512" y="504" class="yes-label">Yes</text>
+
+  <!-- ============================================================ -->
+  <!-- PROCESS: Parse XML body  (y=524, h=36) -->
+  <!-- bottom = 560 -->
+  <!-- ============================================================ -->
+  <rect x="375" y="524" width="250" height="36" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="500" y="546" class="node-text">Parse XML body for report type</text>
+
+  <!-- Arrow: Process bottom (500,560) -> Decision 3 top (500,598) -->
+  <line x1="500" y1="560" x2="500" y2="598" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- DECISION 3: Which report type?  (cy=638, dy=40, dx=110) -->
+  <!-- top=598, bottom=678, left=390, right=610 -->
+  <!-- ============================================================ -->
+  <polygon points="500,598 610,638 500,678 390,638" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="500" y="635" class="decision-text">Which</text>
+  <text x="500" y="647" class="decision-text">report type?</text>
+
+  <!-- ============================================================ -->
+  <!-- BRANCH SEPARATOR and column headers -->
+  <!-- ============================================================ -->
+  <line x1="30" y1="700" x2="970" y2="700" stroke="#ccc" stroke-width="1" stroke-dasharray="6,3"/>
+
+  <text x="165" y="718" class="branch-label">calendar-multiget</text>
+  <text x="500" y="718" class="branch-label">calendar-query</text>
+  <text x="810" y="718" class="branch-label">sync-collection</text>
+
+  <!-- ============================================================ -->
+  <!-- BRANCH ARROWS from decision diamond to three columns -->
+  <!-- ============================================================ -->
+
+  <!-- Left branch: left vertex (390,638) -> left then down to multiget column -->
+  <path d="M 390,638 L 165,638 L 165,735" class="arrow" fill="none"/>
+
+  <!-- Center branch: bottom vertex (500,678) -> down to query column -->
+  <line x1="500" y1="678" x2="500" y2="735" class="arrow"/>
+
+  <!-- Right branch: right vertex (610,638) -> right then down to sync column -->
+  <path d="M 610,638 L 810,638 L 810,735" class="arrow" fill="none"/>
+
+
+  <!-- ============================================================ -->
+  <!-- LEFT COLUMN: calendar-multiget (center x=165) -->
+  <!-- ============================================================ -->
+
+  <!-- Process: Extract hrefs (y=735, h=36) -->
+  <!-- bottom = 771 -->
+  <rect x="50" y="735" width="230" height="36" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="165" y="757" class="node-text">Extract list of hrefs from XML</text>
+
+  <!-- Arrow: (165,771) -> (165,807) -->
+  <line x1="165" y1="771" x2="165" y2="807" class="arrow"/>
+
+  <!-- Process: Look up each object (y=807, h=48) -->
+  <!-- bottom = 855 -->
+  <rect x="50" y="807" width="230" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="165" y="827" class="node-text">For each href, extract {uid}</text>
+  <text x="165" y="841" class="node-sub">Look up calendar object by UID</text>
+
+  <!-- Arrow: (165,855) -> (165,891) -->
+  <line x1="165" y1="855" x2="165" y2="891" class="arrow"/>
+
+  <!-- Process: Build multistatus (y=891, h=48) -->
+  <!-- bottom = 939 -->
+  <rect x="50" y="891" width="230" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="165" y="911" class="node-text">Build multistatus response</text>
+  <text x="165" y="925" class="node-sub">getetag + calendar-data (.ics)</text>
+
+  <!-- Arrow: (165,939) -> (165,969) -->
+  <line x1="165" y1="939" x2="165" y2="969" class="arrow"/>
+
+  <!-- End: Return 207  (cy=995, ry=26) -->
+  <!-- top = 969 -->
+  <ellipse cx="165" cy="995" rx="95" ry="26" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="165" y="993" class="node-text">Return 207</text>
+  <text x="165" y="1006" class="node-sub">Multi-Status</text>
+
+
+  <!-- ============================================================ -->
+  <!-- CENTER COLUMN: calendar-query (center x=500) -->
+  <!-- ============================================================ -->
+
+  <!-- Process: Extract time-range filter (y=735, h=48) -->
+  <!-- bottom = 783 -->
+  <rect x="385" y="735" width="230" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="500" y="755" class="node-text">Extract time-range filter</text>
+  <text x="500" y="769" class="node-sub">(start, end) from XML body</text>
+
+  <!-- Arrow: (500,783) -> (500,819) -->
+  <line x1="500" y1="783" x2="500" y2="819" class="arrow"/>
+
+  <!-- Process: Query objects (y=819, h=48) -->
+  <!-- bottom = 867 -->
+  <rect x="385" y="819" width="230" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="500" y="839" class="node-text">Query calendar objects</text>
+  <text x="500" y="853" class="node-sub">WHERE dtstart &lt; end AND dtend &gt; start</text>
+
+  <!-- Arrow: (500,867) -> (500,903) -->
+  <line x1="500" y1="867" x2="500" y2="903" class="arrow"/>
+
+  <!-- Process: Build multistatus (y=903, h=48) -->
+  <!-- bottom = 951 -->
+  <rect x="385" y="903" width="230" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="500" y="923" class="node-text">Build multistatus response</text>
+  <text x="500" y="937" class="node-sub">Matching objects with properties</text>
+
+  <!-- Arrow: (500,951) -> (500,969) -->
+  <line x1="500" y1="951" x2="500" y2="969" class="arrow"/>
+
+  <!-- End: Return 207 (cy=995, ry=26) -->
+  <!-- top = 969 -->
+  <ellipse cx="500" cy="995" rx="95" ry="26" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="500" y="993" class="node-text">Return 207</text>
+  <text x="500" y="1006" class="node-sub">Multi-Status</text>
+
+
+  <!-- ============================================================ -->
+  <!-- RIGHT COLUMN: sync-collection (center x=810) -->
+  <!-- ============================================================ -->
+
+  <!-- Process: Extract sync-token (y=735, h=36) -->
+  <!-- bottom = 771 -->
+  <rect x="700" y="735" width="220" height="36" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="810" y="757" class="node-text">Extract sync-token from XML</text>
+
+  <!-- Arrow: (810,771) -> (810,805) -->
+  <line x1="810" y1="771" x2="810" y2="805" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- DECISION 4: sync-token empty?  (cy=843, dy=38, dx=85) -->
+  <!-- top=805, bottom=881, left=725, right=895 -->
+  <!-- ============================================================ -->
+  <polygon points="810,805 895,843 810,881 725,843" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="810" y="840" class="decision-text">sync-token</text>
+  <text x="810" y="852" class="decision-text">empty?</text>
+
+  <!-- ============================================================ -->
+  <!-- SYNC LEFT SUB-BRANCH: Full Sync (Yes) - center x=710 -->
+  <!-- ============================================================ -->
+
+  <!-- Yes arrow: left vertex (725,843) -> down-left to Full Sync -->
+  <path d="M 725,843 L 710,843 L 710,915" class="arrow-yes" fill="none"/>
+  <text x="700" y="836" class="yes-label">Yes</text>
+
+  <!-- Process: Full Sync - Query ALL objects (y=915, h=48) -->
+  <!-- bottom = 963 -->
+  <rect x="620" y="915" width="180" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="710" y="933" class="node-text">Full Sync</text>
+  <text x="710" y="947" class="node-sub">Query ALL calendar objects</text>
+
+  <!-- Arrow: (710,963) -> (710,999) -->
+  <line x1="710" y1="963" x2="710" y2="999" class="arrow"/>
+
+  <!-- Process: Build multistatus + new token (y=999, h=60) -->
+  <!-- bottom = 1059 -->
+  <rect x="620" y="999" width="180" height="60" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="710" y="1019" class="node-text">Build multistatus</text>
+  <text x="710" y="1033" class="node-sub">All objects + properties</text>
+  <text x="710" y="1045" class="node-sub">Generate new sync-token</text>
+
+  <!-- Arrow: (710,1059) -> (710,1085) -->
+  <line x1="710" y1="1059" x2="710" y2="1085" class="arrow"/>
+
+  <!-- End: Return 207 (cy=1111, ry=26) -->
+  <!-- top = 1085 -->
+  <ellipse cx="710" cy="1111" rx="85" ry="26" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="710" y="1109" class="node-text">Return 207</text>
+  <text x="710" y="1122" class="node-sub">Multi-Status</text>
+
+
+  <!-- ============================================================ -->
+  <!-- SYNC RIGHT SUB-BRANCH: Delta Sync (No) - center x=920 -->
+  <!-- ============================================================ -->
+
+  <!-- No arrow: right vertex (895,843) -> down-right to Delta Sync -->
+  <path d="M 895,843 L 910,843 L 910,915" class="arrow-no" fill="none"/>
+  <text x="905" y="836" class="no-label">No</text>
+
+  <!-- Process: Delta Sync - Query sync_changes (y=915, h=48) -->
+  <!-- bottom = 963 -->
+  <rect x="830" y="915" width="160" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="910" y="933" class="node-text">Delta Sync</text>
+  <text x="910" y="947" class="node-sub">Query sync_changes &gt; token</text>
+
+  <!-- Arrow: (910,963) -> (910,999) -->
+  <line x1="910" y1="963" x2="910" y2="999" class="arrow"/>
+
+  <!-- Process: Process each change (y=999, h=72) -->
+  <!-- bottom = 1071 -->
+  <rect x="830" y="999" width="160" height="72" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="910" y="1019" class="node-text">For each change:</text>
+  <text x="910" y="1033" class="node-sub">created/modified:</text>
+  <text x="910" y="1045" class="node-sub">include object data</text>
+  <text x="910" y="1057" class="node-sub">deleted: include 404 href</text>
+
+  <!-- Arrow: (910,1071) -> (910,1107) -->
+  <line x1="910" y1="1071" x2="910" y2="1107" class="arrow"/>
+
+  <!-- Process: Generate new sync-token (y=1107, h=48) -->
+  <!-- bottom = 1155 -->
+  <rect x="830" y="1107" width="160" height="48" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="910" y="1127" class="node-text">Generate sync-token</text>
+  <text x="910" y="1141" class="node-sub">UUID v7 (time-ordered)</text>
+
+  <!-- Arrow: (910,1155) -> (910,1181) -->
+  <line x1="910" y1="1155" x2="910" y2="1181" class="arrow"/>
+
+  <!-- End: Return 207 + sync-token (cy=1207, ry=26) -->
+  <!-- top = 1181 -->
+  <ellipse cx="910" cy="1207" rx="80" ry="26" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="910" y="1205" class="node-text">Return 207</text>
+  <text x="910" y="1218" class="node-sub">Multi-Status + sync-token</text>
+
+
+  <!-- ============================================================ -->
+  <!-- LEGEND -->
+  <!-- ============================================================ -->
+  <g transform="translate(30, 1310)">
+    <text x="0" y="0" class="label-text" style="font-size:13px">Legend</text>
+
+    <!-- Start terminal -->
+    <ellipse cx="25" cy="30" rx="20" ry="12" fill="url(#startGrad)"/>
+    <text x="55" y="35" class="label-text">Start / Request</text>
+
+    <!-- Decision -->
+    <polygon points="25,58 40,70 25,82 10,70" fill="url(#decisionGrad)"/>
+    <text x="55" y="75" class="label-text">Decision</text>
+
+    <!-- Process -->
+    <rect x="5" y="93" width="40" height="18" rx="4" fill="url(#processGrad)"/>
+    <text x="55" y="107" class="label-text">Process step</text>
+
+    <!-- Success -->
+    <ellipse cx="25" cy="133" rx="20" ry="12" fill="url(#endGrad)"/>
+    <text x="55" y="138" class="label-text">Success response (207)</text>
+
+    <!-- Error -->
+    <rect x="5" y="156" width="40" height="18" rx="4" fill="url(#errorGrad)"/>
+    <text x="55" y="170" class="label-text">Error response (401, 403)</text>
+
+    <!-- Arrow legend -->
+    <line x1="310" y1="30" x2="360" y2="30" class="arrow"/>
+    <text x="370" y="35" class="label-text">Main flow / continue</text>
+
+    <line x1="310" y1="60" x2="360" y2="60" class="arrow-yes"/>
+    <text x="370" y="65" class="yes-label">Yes / true path</text>
+
+    <line x1="310" y1="90" x2="360" y2="90" class="arrow-no"/>
+    <text x="370" y="95" class="no-label">No / false path</text>
+
+    <!-- Branch separator sample -->
+    <line x1="310" y1="127" x2="380" y2="127" stroke="#ccc" stroke-width="1" stroke-dasharray="6,3"/>
+    <text x="390" y="131" class="label-text">Branch separator (3 report types)</text>
+  </g>
+</svg>

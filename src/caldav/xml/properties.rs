@@ -14,7 +14,7 @@ pub fn root_props(username: &str) -> Vec<PropValue> {
             name: "current-user-principal".to_string(),
             namespace: DAV_NS.to_string(),
             value: PropContent::Xml(format!(
-                "<D:href>/caldav/principals/{username}/</D:href>"
+                "<D:href>/caldav/users/{username}/</D:href>"
             )),
         },
         PropValue {
@@ -25,52 +25,28 @@ pub fn root_props(username: &str) -> Vec<PropValue> {
     ]
 }
 
-/// Build the standard set of properties for a user principal resource.
-pub fn principal_props(username: &str) -> Vec<PropValue> {
+/// Build properties for the CalDAV root when the user is NOT authenticated.
+/// Uses <D:unauthenticated/> for current-user-principal per RFC 5397.
+pub fn root_props_unauthenticated() -> Vec<PropValue> {
     vec![
         PropValue {
             name: "resourcetype".to_string(),
             namespace: DAV_NS.to_string(),
-            value: PropContent::Xml("<D:collection/><D:principal/>".to_string()),
-        },
-        PropValue {
-            name: "displayname".to_string(),
-            namespace: DAV_NS.to_string(),
-            value: PropContent::Text(username.to_string()),
-        },
-        PropValue {
-            name: "calendar-home-set".to_string(),
-            namespace: CALDAV_NS.to_string(),
-            value: PropContent::Xml(format!(
-                "<D:href>/caldav/users/{username}/</D:href>"
-            )),
+            value: PropContent::Xml("<D:collection/>".to_string()),
         },
         PropValue {
             name: "current-user-principal".to_string(),
             namespace: DAV_NS.to_string(),
-            value: PropContent::Xml(format!(
-                "<D:href>/caldav/principals/{username}/</D:href>"
-            )),
+            value: PropContent::Xml("<D:unauthenticated/>".to_string()),
         },
         PropValue {
-            name: "principal-URL".to_string(),
+            name: "displayname".to_string(),
             namespace: DAV_NS.to_string(),
-            value: PropContent::Xml(format!(
-                "<D:href>/caldav/principals/{username}/</D:href>"
-            )),
-        },
-        PropValue {
-            name: "supported-report-set".to_string(),
-            namespace: DAV_NS.to_string(),
-            value: PropContent::Xml(
-                "<D:supported-report><D:report><C:calendar-multiget/></D:report></D:supported-report>\
-                 <D:supported-report><D:report><C:calendar-query/></D:report></D:supported-report>\
-                 <D:supported-report><D:report><D:sync-collection/></D:report></D:supported-report>"
-                    .to_string(),
-            ),
+            value: PropContent::Text("CalDAV Server".to_string()),
         },
     ]
 }
+
 
 /// Build the standard set of properties for a calendar-home-set resource.
 pub fn calendar_home_props(username: &str) -> Vec<PropValue> {
@@ -89,8 +65,107 @@ pub fn calendar_home_props(username: &str) -> Vec<PropValue> {
             name: "current-user-principal".to_string(),
             namespace: DAV_NS.to_string(),
             value: PropContent::Xml(format!(
-                "<D:href>/caldav/principals/{username}/</D:href>"
+                "<D:href>/caldav/users/{username}/</D:href>"
             )),
+        },
+    ]
+}
+
+/// Build minimal discovery properties for the email home URL when the user
+/// is NOT authenticated. Returns only structural/capability props needed
+/// for `accountsd` to complete account setup without leaking user data.
+pub fn email_home_props_unauthenticated(request_path: &str) -> Vec<PropValue> {
+    vec![
+        PropValue {
+            name: "resourcetype".to_string(),
+            namespace: DAV_NS.to_string(),
+            value: PropContent::Xml("<D:collection/><D:principal/>".to_string()),
+        },
+        PropValue {
+            name: "displayname".to_string(),
+            namespace: DAV_NS.to_string(),
+            value: PropContent::Text("CalDAV Account".to_string()),
+        },
+        PropValue {
+            name: "current-user-principal".to_string(),
+            namespace: DAV_NS.to_string(),
+            value: PropContent::Xml(format!("<D:href>{request_path}</D:href>")),
+        },
+        PropValue {
+            name: "principal-URL".to_string(),
+            namespace: DAV_NS.to_string(),
+            value: PropContent::Xml(format!("<D:href>{request_path}</D:href>")),
+        },
+        PropValue {
+            name: "calendar-home-set".to_string(),
+            namespace: CALDAV_NS.to_string(),
+            value: PropContent::Xml(format!("<D:href>{request_path}</D:href>")),
+        },
+        PropValue {
+            name: "supported-report-set".to_string(),
+            namespace: DAV_NS.to_string(),
+            value: PropContent::Xml(
+                "<D:supported-report><D:report><C:calendar-multiget/></D:report></D:supported-report>\
+                 <D:supported-report><D:report><C:calendar-query/></D:report></D:supported-report>\
+                 <D:supported-report><D:report><D:sync-collection/></D:report></D:supported-report>"
+                    .to_string(),
+            ),
+        },
+    ]
+}
+
+/// Build properties for the Apple-proprietary email home URL
+/// (/calendar/dav/{email}/user/) when the user IS authenticated.
+///
+/// `dataaccessd` treats this URL as both the principal and calendar home.
+/// We set `current-user-principal`, `principal-URL`, and `calendar-home-set`
+/// all to point back to `request_path` (the URL the client is already at),
+/// so it never needs to follow a redirect to find the calendar list.
+pub fn email_home_props(username: &str, request_path: &str) -> Vec<PropValue> {
+    vec![
+        PropValue {
+            name: "resourcetype".to_string(),
+            namespace: DAV_NS.to_string(),
+            value: PropContent::Xml("<D:collection/><D:principal/>".to_string()),
+        },
+        PropValue {
+            name: "displayname".to_string(),
+            namespace: DAV_NS.to_string(),
+            value: PropContent::Text(username.to_string()),
+        },
+        PropValue {
+            name: "current-user-principal".to_string(),
+            namespace: DAV_NS.to_string(),
+            value: PropContent::Xml(format!("<D:href>{request_path}</D:href>")),
+        },
+        PropValue {
+            name: "principal-URL".to_string(),
+            namespace: DAV_NS.to_string(),
+            value: PropContent::Xml(format!("<D:href>{request_path}</D:href>")),
+        },
+        PropValue {
+            name: "calendar-home-set".to_string(),
+            namespace: CALDAV_NS.to_string(),
+            value: PropContent::Xml(format!("<D:href>{request_path}</D:href>")),
+        },
+        PropValue {
+            name: "supported-report-set".to_string(),
+            namespace: DAV_NS.to_string(),
+            value: PropContent::Xml(
+                "<D:supported-report><D:report><C:calendar-multiget/></D:report></D:supported-report>\
+                 <D:supported-report><D:report><C:calendar-query/></D:report></D:supported-report>\
+                 <D:supported-report><D:report><D:sync-collection/></D:report></D:supported-report>"
+                    .to_string(),
+            ),
+        },
+        PropValue {
+            name: "current-user-privilege-set".to_string(),
+            namespace: DAV_NS.to_string(),
+            value: PropContent::Xml(
+                "<D:privilege><D:read/></D:privilege>\
+                 <D:privilege><D:write/></D:privilege>"
+                    .to_string(),
+            ),
         },
     ]
 }
@@ -144,7 +219,7 @@ pub fn calendar_props(username: &str, calendar: &Calendar) -> Vec<PropValue> {
             name: "current-user-principal".to_string(),
             namespace: DAV_NS.to_string(),
             value: PropContent::Xml(format!(
-                "<D:href>/caldav/principals/{username}/</D:href>"
+                "<D:href>/caldav/users/{username}/</D:href>"
             )),
         },
         PropValue {
@@ -161,8 +236,7 @@ pub fn calendar_props(username: &str, calendar: &Calendar) -> Vec<PropValue> {
             name: "owner".to_string(),
             namespace: DAV_NS.to_string(),
             value: PropContent::Xml(format!(
-                "<D:href>/caldav/principals/{}/</D:href>",
-                calendar.owner_id
+                "<D:href>/caldav/users/{username}/</D:href>"
             )),
         },
         PropValue {

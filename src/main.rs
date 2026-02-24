@@ -62,6 +62,16 @@ enum Commands {
         #[arg(short, long)]
         id: String,
     },
+
+    /// Reset a user's password
+    ResetPassword {
+        /// Username
+        #[arg(short, long)]
+        username: String,
+        /// New password
+        #[arg(short, long)]
+        password: String,
+    },
 }
 
 #[tokio::main]
@@ -85,6 +95,9 @@ async fn main() -> anyhow::Result<()> {
         Commands::ListUsers => cmd_list_users().await,
         Commands::ListTokens { username } => cmd_list_tokens(&username).await,
         Commands::DeleteToken { id } => cmd_delete_token(&id).await,
+        Commands::ResetPassword { username, password } => {
+            cmd_reset_password(&username, &password).await
+        }
     }
 }
 
@@ -216,5 +229,13 @@ async fn cmd_delete_token(token_id: &str) -> anyhow::Result<()> {
     let pool = cli_pool().await?;
     db::tokens::delete_token(&pool, token_id).await?;
     println!("Token {token_id} deleted.");
+    Ok(())
+}
+
+/// Reset a user's password.
+async fn cmd_reset_password(username: &str, password: &str) -> anyhow::Result<()> {
+    let pool = cli_pool().await?;
+    db::users::reset_password(&pool, username, password).await?;
+    println!("Password updated for user '{username}'.");
     Ok(())
 }

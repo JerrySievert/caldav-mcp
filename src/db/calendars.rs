@@ -19,6 +19,19 @@ pub async fn create_calendar(
     timezone: &str,
 ) -> AppResult<Calendar> {
     let id = Uuid::now_v7().to_string();
+    create_calendar_with_id(pool, &id, owner_id, name, description, color, timezone).await
+}
+
+/// Create a new calendar with a specific ID. Returns the created calendar.
+pub async fn create_calendar_with_id(
+    pool: &SqlitePool,
+    id: &str,
+    owner_id: &str,
+    name: &str,
+    description: &str,
+    color: &str,
+    timezone: &str,
+) -> AppResult<Calendar> {
     let sync_token = new_sync_token();
 
     sqlx::query(

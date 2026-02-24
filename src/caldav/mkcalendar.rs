@@ -34,7 +34,7 @@ pub async fn handle_mkcalendar(
     let name = extract_displayname(&body).unwrap_or_else(|| calendar_id.clone());
     let color = extract_calendar_color(&body).unwrap_or_else(|| "#0E61B9".to_string());
 
-    match calendars::create_calendar(&pool, &user.id, &name, "", &color, "UTC").await {
+    match calendars::create_calendar_with_id(&pool, &calendar_id, &user.id, &name, "", &color, "UTC").await {
         Ok(_cal) => (StatusCode::CREATED, "Calendar created").into_response(),
         Err(e) => {
             tracing::error!("Failed to create calendar: {e}");

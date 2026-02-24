@@ -1,0 +1,418 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1020" width="900" height="1020">
+  <defs>
+    <style>
+      .title { font: bold 20px sans-serif; fill: #333; }
+      .subtitle { font: italic 12px sans-serif; fill: #666; }
+      .section-label { font: bold 12px sans-serif; fill: #555; }
+      .node-text { font: bold 12px sans-serif; fill: #fff; text-anchor: middle; }
+      .node-sub { font: 10px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+      .decision-text { font: bold 11px sans-serif; fill: #fff; text-anchor: middle; }
+      .label-text { font: bold 11px sans-serif; fill: #444; }
+      .yes-label { font: bold 11px sans-serif; fill: #2d6a4f; }
+      .no-label { font: bold 11px sans-serif; fill: #c1292e; }
+      .path-label { font: bold 10px sans-serif; fill: #555; }
+      .arrow { stroke: #444; stroke-width: 1.8; fill: none; marker-end: url(#arrowhead); }
+      .arrow-yes { stroke: #2d6a4f; stroke-width: 1.8; fill: none; marker-end: url(#arrowhead-yes); }
+      .arrow-no { stroke: #c1292e; stroke-width: 1.8; fill: none; marker-end: url(#arrowhead-no); }
+      .legend-label { font: 11px sans-serif; fill: #555; }
+      .group-label { font: bold 13px sans-serif; fill: #444; }
+    </style>
+
+    <!-- Arrowhead markers -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#444"/>
+    </marker>
+    <marker id="arrowhead-yes" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2d6a4f"/>
+    </marker>
+    <marker id="arrowhead-no" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#c1292e"/>
+    </marker>
+
+    <!-- Drop shadow -->
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.15"/>
+    </filter>
+
+    <!-- Node gradients -->
+    <linearGradient id="startGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5a9fd4"/>
+      <stop offset="100%" stop-color="#4a90d9"/>
+    </linearGradient>
+    <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6b9def"/>
+      <stop offset="100%" stop-color="#5b8def"/>
+    </linearGradient>
+    <linearGradient id="decisionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f0a14a"/>
+      <stop offset="100%" stop-color="#e8913a"/>
+    </linearGradient>
+    <linearGradient id="endGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2ebd6a"/>
+      <stop offset="100%" stop-color="#27ae60"/>
+    </linearGradient>
+    <linearGradient id="errorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f05c4c"/>
+      <stop offset="100%" stop-color="#e74c3c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="1020" fill="#fafbfc" rx="8"/>
+
+  <!-- Title -->
+  <text x="450" y="30" class="title" text-anchor="middle">PROPFIND Request Flow</text>
+  <text x="450" y="47" class="subtitle" text-anchor="middle">CalDAV Server -- All path levels with auth, depth, and security handling</text>
+
+  <!-- ============================================================ -->
+  <!-- START NODE  (center x=450, y=82)                             -->
+  <!-- ============================================================ -->
+  <ellipse cx="450" cy="82" rx="110" ry="24" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="450" y="87" class="node-text">PROPFIND Request</text>
+
+  <!-- Arrow: START -> OPTIONS decision -->
+  <line x1="450" y1="106" x2="450" y2="135" class="arrow"/>
+
+  <!-- ============================================================ -->
+  <!-- DECISION: Is method OPTIONS?  (center 450, 172)              -->
+  <!-- ============================================================ -->
+  <polygon points="450,135 555,172 450,209 345,172" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="450" y="169" class="decision-text">Is method</text>
+  <text x="450" y="181" class="decision-text">OPTIONS?</text>
+
+  <!-- Yes -> Return 200 (right vertex to end node) -->
+  <line x1="555" y1="172" x2="680" y2="172" class="arrow-yes"/>
+  <text x="575" y="165" class="yes-label">Yes</text>
+
+  <rect x="680" y="155" width="190" height="34" rx="17" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="775" y="176" class="node-text" font-size="11">Return 200 + DAV headers</text>
+
+  <!-- No -> path dispatch (bottom vertex down) -->
+  <line x1="450" y1="209" x2="450" y2="240" class="arrow-no"/>
+  <text x="462" y="228" class="no-label">No</text>
+
+  <!-- ============================================================ -->
+  <!-- DECISION: Which path level?  (center 450, 287)               -->
+  <!-- ============================================================ -->
+  <polygon points="450,240 590,287 450,334 310,287" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="450" y="284" class="decision-text">Which</text>
+  <text x="450" y="296" class="decision-text">path level?</text>
+
+  <!-- ============================================================ -->
+  <!-- 5 BRANCH EXITS from path diamond                             -->
+  <!-- Columns: x=85, x=230, x=395, x=595, x=810                  -->
+  <!-- ============================================================ -->
+
+  <!-- Branch 1: /caldav/ (Root) -> left vertex to Parse XML top -->
+  <path d="M 310,287 L 85,287 L 85,395" class="arrow" fill="none"/>
+  <text x="155" y="280" class="path-label">/caldav/</text>
+
+  <!-- Branch 2: /caldav/principals/ -> bottom vertex, diagonal to 301 rect top -->
+  <path d="M 450,334 L 230,395" class="arrow" fill="none"/>
+  <text x="290" y="365" class="path-label" text-anchor="end">principals/</text>
+
+  <!-- Branch 3: /caldav/users/{user}/ -> bottom vertex, angle down to auth process top -->
+  <path d="M 450,334 L 395,395" class="arrow" fill="none"/>
+  <text x="405" y="370" class="path-label">users/{user}/</text>
+
+  <!-- Branch 4: /caldav/users/{user}/{cal_id}/ -> bottom vertex, angle right to auth process top -->
+  <path d="M 450,334 L 595,395" class="arrow" fill="none"/>
+  <text x="535" y="370" class="path-label">.../{cal_id}/</text>
+
+  <!-- Branch 5: /calendar/dav/{email}/user/ -> right vertex to diamond top -->
+  <path d="M 590,287 L 800,287 L 800,397" class="arrow" fill="none"/>
+  <text x="680" y="280" class="path-label">/calendar/dav/{email}/</text>
+
+  <!-- ============================================================ -->
+  <!-- Horizontal divider                                           -->
+  <!-- ============================================================ -->
+  <line x1="15" y1="355" x2="885" y2="355" stroke="#ddd" stroke-width="1" stroke-dasharray="6,3"/>
+
+  <!-- Column separators -->
+  <line x1="163" y1="362" x2="163" y2="890" stroke="#eee" stroke-width="1"/>
+  <line x1="310" y1="362" x2="310" y2="890" stroke="#eee" stroke-width="1"/>
+  <line x1="495" y1="362" x2="495" y2="890" stroke="#eee" stroke-width="1"/>
+  <line x1="700" y1="362" x2="700" y2="890" stroke="#eee" stroke-width="1"/>
+
+
+  <!-- ================================================================ -->
+  <!-- COL 1: /caldav/ (Root) -- center x=85                            -->
+  <!-- Width: 15..163 = 148px                                          -->
+  <!-- ================================================================ -->
+  <text x="85" y="380" class="section-label" text-anchor="middle">Root</text>
+
+  <rect x="22" y="395" width="126" height="40" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="85" y="412" class="node-text" font-size="11">Parse XML body</text>
+  <text x="85" y="425" class="node-sub">requested props</text>
+
+  <line x1="85" y1="435" x2="85" y2="458" class="arrow"/>
+
+  <rect x="15" y="458" width="140" height="55" rx="17" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="85" y="478" class="node-text" font-size="10">Return 207</text>
+  <text x="85" y="491" class="node-sub">current-user-principal</text>
+  <text x="85" y="503" class="node-sub">resourcetype</text>
+
+
+  <!-- ================================================================ -->
+  <!-- COL 2: /caldav/principals/ -- center x=230                       -->
+  <!-- Width: 163..310 = 147px                                         -->
+  <!-- ================================================================ -->
+  <text x="230" y="380" class="section-label" text-anchor="middle">Principals</text>
+
+  <rect x="172" y="395" width="116" height="40" rx="17" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="230" y="412" class="node-text" font-size="10">Return 301</text>
+  <text x="230" y="425" class="node-sub">/caldav/users/{user}/</text>
+
+
+  <!-- ================================================================ -->
+  <!-- COL 3: /caldav/users/{user}/ (Calendar Home) -- center x=395     -->
+  <!-- Width: 310..495 = 185px                                         -->
+  <!-- ================================================================ -->
+  <text x="395" y="380" class="section-label" text-anchor="middle">Calendar Home</text>
+
+  <!-- auth_or_path_user -->
+  <rect x="322" y="395" width="146" height="40" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="395" y="412" class="node-text" font-size="10">auth_or_path_user</text>
+  <text x="395" y="424" class="node-sub">Basic / path fallback</text>
+
+  <line x1="395" y1="435" x2="395" y2="458" class="arrow"/>
+
+  <!-- Decision: User resolved? -->
+  <polygon points="395,458 465,483 395,508 325,483" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="395" y="480" class="decision-text">User</text>
+  <text x="395" y="492" class="decision-text">resolved?</text>
+
+  <!-- No -> 401 (right side, keep within column) -->
+  <line x1="465" y1="483" x2="487" y2="483" class="arrow-no"/>
+  <text x="471" y="476" class="no-label">No</text>
+
+  <rect x="484" y="469" width="38" height="28" rx="14" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="503" y="487" class="node-text" font-size="9">401</text>
+
+  <!-- Yes -> Depth -->
+  <line x1="395" y1="508" x2="395" y2="532" class="arrow-yes"/>
+  <text x="406" y="523" class="yes-label">Yes</text>
+
+  <!-- Decision: Depth -->
+  <polygon points="395,532 460,555 395,578 330,555" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="395" y="558" class="decision-text">Depth?</text>
+
+  <!-- Depth 0 (left) -->
+  <path d="M 330,555 L 318,555 L 318,592" class="arrow" fill="none"/>
+  <text x="322" y="548" class="label-text">0</text>
+
+  <rect x="262" y="592" width="112" height="52" rx="17" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="318" y="610" class="node-text" font-size="10">Return 207</text>
+  <text x="318" y="622" class="node-sub">calendar-home-set</text>
+  <text x="318" y="634" class="node-sub">type=collection</text>
+
+  <!-- Depth 1 (down) -->
+  <line x1="395" y1="578" x2="395" y2="602" class="arrow"/>
+  <text x="406" y="593" class="label-text">1</text>
+
+  <!-- Query calendars -->
+  <rect x="334" y="602" width="122" height="36" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="395" y="618" class="node-text" font-size="10">Query calendars</text>
+  <text x="395" y="630" class="node-sub">owned + shared</text>
+
+  <line x1="395" y1="638" x2="395" y2="660" class="arrow"/>
+
+  <rect x="320" y="660" width="150" height="68" rx="17" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="395" y="679" class="node-text" font-size="10">Return 207</text>
+  <text x="395" y="692" class="node-sub">collection + each cal:</text>
+  <text x="395" y="704" class="node-sub">displayname, color, ctag,</text>
+  <text x="395" y="716" class="node-sub">supported-component-set</text>
+
+
+  <!-- ================================================================ -->
+  <!-- COL 4: /caldav/users/{user}/{cal_id}/ (Collection) -- center x=595 -->
+  <!-- Width: 495..700 = 205px                                         -->
+  <!-- ================================================================ -->
+  <text x="595" y="380" class="section-label" text-anchor="middle">Collection</text>
+
+  <!-- auth_or_path_user -->
+  <rect x="522" y="395" width="146" height="40" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="595" y="412" class="node-text" font-size="10">auth_or_path_user</text>
+  <text x="595" y="424" class="node-sub">Basic / path fallback</text>
+
+  <line x1="595" y1="435" x2="595" y2="458" class="arrow"/>
+
+  <!-- Decision: User resolved? -->
+  <polygon points="595,458 665,483 595,508 525,483" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="595" y="480" class="decision-text">User</text>
+  <text x="595" y="492" class="decision-text">resolved?</text>
+
+  <!-- No -> 401 -->
+  <line x1="665" y1="483" x2="680" y2="483" class="arrow-no"/>
+  <text x="668" y="476" class="no-label">No</text>
+
+  <rect x="677" y="469" width="36" height="28" rx="14" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="695" y="487" class="node-text" font-size="9">401</text>
+
+  <!-- Yes -> verify ownership -->
+  <line x1="595" y1="508" x2="595" y2="530" class="arrow-yes"/>
+  <text x="606" y="522" class="yes-label">Yes</text>
+
+  <!-- Verify ownership -->
+  <rect x="527" y="530" width="136" height="40" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="595" y="547" class="node-text" font-size="10">Verify ownership</text>
+  <text x="595" y="559" class="node-sub">owner or shared</text>
+
+  <line x1="595" y1="570" x2="595" y2="592" class="arrow"/>
+
+  <!-- Decision: Has access? -->
+  <polygon points="595,592 665,617 595,642 525,617" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="595" y="614" class="decision-text">Has</text>
+  <text x="595" y="626" class="decision-text">access?</text>
+
+  <!-- No -> 403 -->
+  <line x1="665" y1="617" x2="680" y2="617" class="arrow-no"/>
+  <text x="668" y="610" class="no-label">No</text>
+
+  <rect x="677" y="603" width="36" height="28" rx="14" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="695" y="621" class="node-text" font-size="9">403</text>
+
+  <!-- Yes -> Depth -->
+  <line x1="595" y1="642" x2="595" y2="666" class="arrow-yes"/>
+  <text x="606" y="657" class="yes-label">Yes</text>
+
+  <!-- Decision: Depth -->
+  <polygon points="595,666 660,689 595,712 530,689" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="595" y="692" class="decision-text">Depth?</text>
+
+  <!-- Depth 0 (left) -->
+  <path d="M 530,689 L 512,689 L 512,726" class="arrow" fill="none"/>
+  <text x="516" y="682" class="label-text">0</text>
+
+  <rect x="455" y="726" width="114" height="52" rx="17" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="512" y="744" class="node-text" font-size="10">Return 207</text>
+  <text x="512" y="756" class="node-sub">calendar props</text>
+  <text x="512" y="768" class="node-sub">(name, color, ctag)</text>
+
+  <!-- Depth 1 (down) -->
+  <line x1="595" y1="712" x2="595" y2="736" class="arrow"/>
+  <text x="606" y="727" class="label-text">1</text>
+
+  <!-- Query objects -->
+  <rect x="537" y="736" width="116" height="36" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="595" y="751" class="node-text" font-size="10">Query objects</text>
+  <text x="595" y="764" class="node-sub">all in collection</text>
+
+  <line x1="595" y1="772" x2="595" y2="795" class="arrow"/>
+
+  <rect x="530" y="795" width="130" height="68" rx="17" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="595" y="814" class="node-text" font-size="10">Return 207</text>
+  <text x="595" y="827" class="node-sub">collection + each obj:</text>
+  <text x="595" y="839" class="node-sub">getetag, contenttype,</text>
+  <text x="595" y="851" class="node-sub">calendar-data</text>
+
+
+  <!-- ================================================================ -->
+  <!-- COL 5: /calendar/dav/{email}/user/ (Email) -- center x=810       -->
+  <!-- Width: 700..900 = 200px                                         -->
+  <!-- "No auth" goes RIGHT (quick terminal), "Yes" goes DOWN (chain)  -->
+  <!-- ================================================================ -->
+  <text x="800" y="380" class="section-label" text-anchor="middle">Email Discovery</text>
+
+  <!-- Decision: Has Auth header?  center=(800,422) -->
+  <polygon points="800,397 862,422 800,447 738,422" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="800" y="419" class="decision-text">Has Auth</text>
+  <text x="800" y="431" class="decision-text">header?</text>
+
+  <!-- No -> generic 207 (bottom vertex, down to terminal) -->
+  <line x1="800" y1="447" x2="800" y2="472" class="arrow-no"/>
+  <text x="812" y="462" class="no-label">No</text>
+
+  <rect x="735" y="472" width="130" height="62" rx="17" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="800" y="491" class="node-text" font-size="10">Return 207</text>
+  <text x="800" y="504" class="node-sub">"CalDAV Account"</text>
+  <text x="800" y="516" class="node-sub">same valid/invalid</text>
+  <text x="800" y="528" class="node-sub">(no enumeration)</text>
+
+  <!-- Yes -> Validate (left vertex, angle down to validate box) -->
+  <path d="M 738,422 L 720,422 L 720,560" class="arrow-yes" fill="none"/>
+  <text x="725" y="415" class="yes-label">Yes</text>
+
+  <!-- Validate credentials -->
+  <rect x="710" y="560" width="110" height="34" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="765" y="581" class="node-text" font-size="10">Validate creds</text>
+
+  <line x1="765" y1="594" x2="765" y2="616" class="arrow"/>
+
+  <!-- Decision: Valid?  center=(765,641) -->
+  <polygon points="765,616 823,641 765,666 707,641" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="765" y="644" class="decision-text">Valid?</text>
+
+  <!-- No -> 401 (right vertex to error node) -->
+  <line x1="823" y1="641" x2="850" y2="641" class="arrow-no"/>
+  <text x="830" y="634" class="no-label">No</text>
+
+  <rect x="847" y="627" width="38" height="28" rx="14" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="866" y="645" class="node-text" font-size="9">401</text>
+
+  <!-- Yes -> Depth (bottom vertex down) -->
+  <line x1="765" y1="666" x2="765" y2="692" class="arrow-yes"/>
+  <text x="776" y="682" class="yes-label">Yes</text>
+
+  <!-- Decision: Depth  center=(765,717) -->
+  <polygon points="765,692 823,717 765,742 707,717" fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="765" y="720" class="decision-text">Depth?</text>
+
+  <!-- Depth 0 (left vertex, down-left) -->
+  <path d="M 707,717 L 700,717 L 700,758" class="arrow" fill="none"/>
+  <text x="704" y="710" class="label-text">0</text>
+
+  <rect x="643" y="758" width="114" height="48" rx="17" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="700" y="776" class="node-text" font-size="10">Return 207</text>
+  <text x="700" y="788" class="node-sub">principal info</text>
+  <text x="700" y="800" class="node-sub">+ username</text>
+
+  <!-- Depth 1 (bottom vertex down) -->
+  <line x1="765" y1="742" x2="765" y2="770" class="arrow"/>
+  <text x="776" y="759" class="label-text">1</text>
+
+  <rect x="708" y="770" width="114" height="48" rx="17" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="765" y="788" class="node-text" font-size="10">Return 207</text>
+  <text x="765" y="800" class="node-sub">principal + full</text>
+  <text x="765" y="812" class="node-sub">calendar list</text>
+
+
+  <!-- ================================================================ -->
+  <!-- LEGEND                                                           -->
+  <!-- ================================================================ -->
+  <line x1="15" y1="900" x2="885" y2="900" stroke="#ccc" stroke-width="1.5" stroke-dasharray="8,4"/>
+
+  <rect x="30" y="920" width="840" height="82" rx="8" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>
+  <text x="50" y="942" class="group-label">Legend</text>
+
+  <!-- Start -->
+  <ellipse cx="80" cy="966" rx="28" ry="11" fill="url(#startGrad)"/>
+  <text x="120" y="970" class="legend-label">Start / Entry</text>
+
+  <!-- Process -->
+  <rect x="200" y="955" width="36" height="22" rx="4" fill="url(#processGrad)"/>
+  <text x="245" y="970" class="legend-label">Process</text>
+
+  <!-- Decision -->
+  <polygon points="338,955 351,966 338,977 325,966" fill="url(#decisionGrad)"/>
+  <text x="362" y="970" class="legend-label">Decision</text>
+
+  <!-- Response -->
+  <rect x="435" y="955" width="36" height="22" rx="11" fill="url(#endGrad)"/>
+  <text x="480" y="970" class="legend-label">Response (200/207/301)</text>
+
+  <!-- Error -->
+  <rect x="625" y="955" width="36" height="22" rx="11" fill="url(#errorGrad)"/>
+  <text x="670" y="970" class="legend-label">Error (401/403)</text>
+
+  <!-- Arrow types -->
+  <line x1="55" y1="990" x2="95" y2="990" class="arrow-yes"/>
+  <text x="105" y="994" class="legend-label">Yes / Success</text>
+
+  <line x1="215" y1="990" x2="255" y2="990" class="arrow-no"/>
+  <text x="265" y="994" class="legend-label">No / Failure</text>
+
+  <line x1="375" y1="990" x2="415" y2="990" class="arrow"/>
+  <text x="425" y="994" class="legend-label">Flow / Branch value</text>
+
+</svg>

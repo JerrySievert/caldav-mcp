@@ -28,9 +28,28 @@ pub async fn init_pool(database_url: &str) -> Result<SqlitePool, sqlx::Error> {
 
 /// Run SQL migrations from the migrations directory.
 async fn run_migrations(pool: &SqlitePool) -> Result<(), sqlx::Error> {
-    sqlx::query(include_str!("../../migrations/001_initial.sql"))
-        .execute(pool)
-        .await?;
+    let sql = include_str!("../../migrations/001_initial.sql");
+
+    // sqlx::query().execute() only runs the first statement.
+    // Split on semicolons and execute each statement individually.
+    for statement in sql.split(';') {
+        let trimmed = statement.trim();
+        // Skip empty segments. Don't skip comments — they may precede
+        // SQL in the same segment, and SQLite handles `--` comments fine.
+        if trimmed.is_empty() {
+            continue;
+        }
+        // Skip segments that are only comments (no actual SQL).
+        let has_sql = trimmed.lines().any(|line| {
+            let l = line.trim();
+            !l.is_empty() && !l.starts_with("--")
+        });
+        if !has_sql {
+            continue;
+        }
+        sqlx::query(trimmed).execute(pool).await?;
+    }
+
     Ok(())
 }
 
