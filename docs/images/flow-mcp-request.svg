@@ -1,0 +1,340 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1770" viewBox="0 0 800 1770">
+<defs>
+  <style>
+    .title        { font: bold 20px sans-serif; fill: #333; text-anchor: middle; }
+    .node-text    { font: bold 12px sans-serif; fill: #fff; text-anchor: middle; }
+    .node-sub     { font: 10px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+    .decision-text{ font: bold 11px sans-serif; fill: #fff; text-anchor: middle; }
+    .label-text   { font: bold 11px sans-serif; fill: #444; text-anchor: middle; }
+    .yes-label    { font: bold 11px sans-serif; fill: #2d6a4f; }
+    .no-label     { font: bold 11px sans-serif; fill: #c1292e; }
+    .arrow        { stroke: #444;    stroke-width: 1.8; fill: none; marker-end: url(#arr); }
+    .arrow-yes    { stroke: #2d6a4f; stroke-width: 1.8; fill: none; marker-end: url(#arr-yes); }
+    .arrow-no     { stroke: #c1292e; stroke-width: 1.8; fill: none; marker-end: url(#arr-no); }
+    .legend-text  { font: 11px sans-serif; fill: #333; }
+    .node { cursor: pointer; }
+    .popup-container { display: none; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+    .popup-container.visible { display: block; pointer-events: auto; opacity: 1; }
+  </style>
+  <marker id="arr"     markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#444"/>
+  </marker>
+  <marker id="arr-yes" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#2d6a4f"/>
+  </marker>
+  <marker id="arr-no"  markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#c1292e"/>
+  </marker>
+  <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+    <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.15"/>
+  </filter>
+  <linearGradient id="startGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#5a9fd4"/>
+    <stop offset="100%" stop-color="#4a90d9"/>
+  </linearGradient>
+  <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#6b9def"/>
+    <stop offset="100%" stop-color="#5b8def"/>
+  </linearGradient>
+  <linearGradient id="decisionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#f0a14a"/>
+    <stop offset="100%" stop-color="#e8913a"/>
+  </linearGradient>
+  <linearGradient id="endGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#2ebd6a"/>
+    <stop offset="100%" stop-color="#27ae60"/>
+  </linearGradient>
+  <linearGradient id="errorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#f05c4c"/>
+    <stop offset="100%" stop-color="#e74c3c"/>
+  </linearGradient>
+</defs>
+
+<!-- Background -->
+<rect width="800" height="1770" fill="#fafbfc" rx="8"/>
+
+<!-- Title -->
+<text x="400" y="35" class="title">MCP Request Flow (Port 5233)</text>
+
+<!-- ================================================================ -->
+<!-- START: cx=350, cy=80, rx=120, ry=32. top=48, bottom=112         -->
+<!-- ================================================================ -->
+<g class="node" data-title="MCP Request" data-desc="An HTTP request arrives on the MCP port (5233).&#10;This port serves the Model Context Protocol API, allowing AI tools to interact with the CalDAV server.&#10;All requests must include a Bearer token for authentication.">
+  <ellipse cx="350" cy="80" rx="120" ry="32" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="350" y="74" dy="4" class="node-text">MCP Request</text>
+  <text x="350" y="92" dy="4" class="node-sub">HTTP on port 5233</text>
+</g>
+
+<!-- Arrow: START bottom (350,112) to Decision top (350,172). gap=60 -->
+<line x1="350" y1="112" x2="350" y2="172" class="arrow"/>
+
+<!-- ================================================================ -->
+<!-- Decision: Bearer token present? cy=212, top=172, bottom=252      -->
+<!-- ================================================================ -->
+<g class="node" data-title="Bearer token present?" data-desc="Checks whether the Authorization header contains a Bearer token.&#10;All MCP requests require token-based authentication. Requests without a valid Bearer prefix are rejected immediately.">
+  <polygon points="350,172 460,212 350,252 240,212"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="208" dy="4" class="decision-text">Bearer token</text>
+  <text x="350" y="222" dy="4" class="decision-text">present?</text>
+</g>
+
+<!-- No: right from (460,212) to 401. cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="212" x2="540" y2="212" class="arrow-no"/>
+<text x="466" y="206" class="no-label">No</text>
+
+<g class="node" data-title="Return 401 Unauthorized" data-desc="No Bearer token was found in the request.&#10;The client must provide a valid MCP token in the Authorization header.">
+  <ellipse cx="620" cy="212" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="206" dy="4" class="node-text">Return 401</text>
+  <text x="620" y="222" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- Yes: down from (350,252) to Process top (350,312). gap=60 -->
+<line x1="350" y1="252" x2="350" y2="312" class="arrow-yes"/>
+<text x="360" y="286" class="yes-label">Yes</text>
+
+<!-- ================================================================ -->
+<!-- Process: Hash and validate token. x=225, y=312, w=250, h=56     -->
+<!-- ================================================================ -->
+<g class="node" data-title="Validate token" data-desc="Hashes the Bearer token with Argon2id and looks up the hash in the mcp_tokens table.&#10;Tokens are never stored in plaintext. The hash comparison determines whether the token is genuine.">
+  <rect x="225" y="312" width="250" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="312" dy="22" class="node-text">Hash token (Argon2id)</text>
+  <text x="350" y="312" dy="38" class="node-sub">Look up in mcp_tokens table</text>
+</g>
+
+<!-- Arrow: Process bottom (350,368) to Decision top (350,428). gap=60 -->
+<line x1="350" y1="368" x2="350" y2="428" class="arrow"/>
+
+<!-- ================================================================ -->
+<!-- Decision: Token valid and not expired? cy=468, top=428, bot=508  -->
+<!-- ================================================================ -->
+<g class="node" data-title="Token valid and not expired?" data-desc="Checks two conditions: the token hash must match a row in mcp_tokens, and that token must not have passed its expiration timestamp.&#10;Expired or unrecognized tokens are rejected.">
+  <polygon points="350,428 460,468 350,508 240,468"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="462" dy="4" class="decision-text">Token valid</text>
+  <text x="350" y="476" dy="4" class="decision-text">and not expired?</text>
+</g>
+
+<!-- No: right from (460,468) to 401. cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="468" x2="540" y2="468" class="arrow-no"/>
+<text x="466" y="462" class="no-label">No</text>
+
+<g class="node" data-title="Return 401 Unauthorized" data-desc="The token is either not recognized or has expired.&#10;The client must obtain a fresh token to continue using the MCP API.">
+  <ellipse cx="620" cy="468" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="462" dy="4" class="node-text">Return 401</text>
+  <text x="620" y="478" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- Yes: down from (350,508) to Decision top (350,568). gap=60 -->
+<line x1="350" y1="508" x2="350" y2="568" class="arrow-yes"/>
+<text x="360" y="542" class="yes-label">Yes</text>
+
+<!-- ================================================================ -->
+<!-- Decision: Is method POST? cy=608, top=568, bottom=648           -->
+<!-- ================================================================ -->
+<g class="node" data-title="Is method POST?" data-desc="Only POST requests carry JSON-RPC payloads for tool execution.&#10;GET opens an SSE stream, DELETE closes the session, and any other method is rejected.&#10;POST requests continue to JSON-RPC processing.">
+  <polygon points="350,568 460,608 350,648 240,608"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="604" dy="4" class="decision-text">Is method</text>
+  <text x="350" y="618" dy="4" class="decision-text">POST?</text>
+</g>
+
+<!-- No: right from (460,608) to dispatch process rect -->
+<!-- Non-POST methods: GET (200 SSE), DELETE (200 close), Other (405) -->
+<!-- Process: x=540, y=580, w=200, h=56. cx=640. left=540. gap=80 -->
+<line x1="460" y1="608" x2="540" y2="608" class="arrow-no"/>
+<text x="466" y="602" class="no-label">No</text>
+
+<g class="node" data-title="Non-POST method handling" data-desc="GET requests return a 200 OK and open a Server-Sent Events (SSE) stream for real-time communication.&#10;DELETE requests close the current session and return 200 OK.&#10;Any other HTTP method returns 405 Method Not Allowed.">
+  <rect x="540" y="580" width="200" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="640" y="580" dy="22" class="node-text">GET: 200 OK (SSE)</text>
+  <text x="640" y="580" dy="38" class="node-sub">DELETE: 200 / Other: 405</text>
+</g>
+
+<!-- Yes: down from (350,648) to Process top (350,708). gap=60 -->
+<line x1="350" y1="648" x2="350" y2="708" class="arrow-yes"/>
+<text x="360" y="682" class="yes-label">Yes</text>
+
+<!-- ================================================================ -->
+<!-- Process: Parse JSON-RPC. x=235, y=708, w=230, h=44. bottom=752  -->
+<!-- ================================================================ -->
+<g class="node" data-title="Parse JSON-RPC 2.0 request" data-desc="Reads the POST body and parses it as a JSON-RPC 2.0 request.&#10;The request contains a method name, optional parameters, and an ID for correlating the response.">
+  <rect x="235" y="708" width="230" height="44" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="708" dy="27" class="node-text">Parse JSON-RPC 2.0 request</text>
+</g>
+
+<!-- Arrow: Process bottom (350,752) to Decision top (350,812). gap=60 -->
+<line x1="350" y1="752" x2="350" y2="812" class="arrow"/>
+
+<!-- ================================================================ -->
+<!-- Decision: Is method tools/call? cy=852, top=812, bottom=892     -->
+<!-- ================================================================ -->
+<g class="node" data-title="Is method tools/call?" data-desc="Checks the JSON-RPC method name to determine how to handle the request.&#10;The tools/call method triggers tool execution and continues to the dispatch logic.&#10;All other methods (initialize, ping, tools/list, notifications) are handled directly with immediate responses.">
+  <polygon points="350,812 460,852 350,892 240,852"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="846" dy="4" class="decision-text">Is method</text>
+  <text x="350" y="860" dy="4" class="decision-text">tools/call?</text>
+</g>
+
+<!-- No: right from (460,852) to dispatch info -->
+<!-- Other JSON-RPC methods: initialize, ping, tools/list, notifications, unknown -->
+<!-- Process: x=540, y=818, w=220, h=68. cx=650. left=540. gap=80 -->
+<line x1="460" y1="852" x2="540" y2="852" class="arrow-no"/>
+<text x="466" y="846" class="no-label">No</text>
+
+<g class="node" data-title="Other JSON-RPC methods" data-desc="Handles non-tool JSON-RPC methods with immediate responses:&#10;initialize: returns protocol info and available tools&#10;ping: returns an empty acknowledgment&#10;notifications/initialized: returns 202 Accepted (no response body)&#10;tools/list: returns the list of tool definitions&#10;Unknown methods: returns JSON-RPC error -32601 (Method not found)">
+  <rect x="540" y="818" width="220" height="68" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="650" y="818" dy="22" class="node-text">Other methods</text>
+  <text x="650" y="818" dy="38" class="node-sub">initialize, ping, tools/list,</text>
+  <text x="650" y="818" dy="52" class="node-sub">notifications, or error -32601</text>
+</g>
+
+<!-- Yes: down from (350,892) to Process top (350,952). gap=60 -->
+<line x1="350" y1="892" x2="350" y2="952" class="arrow-yes"/>
+<text x="360" y="926" class="yes-label">Yes</text>
+
+<!-- ================================================================ -->
+<!-- Process: Extract tool name. x=250, y=952, w=200, h=44. bot=996  -->
+<!-- ================================================================ -->
+<g class="node" data-title="Extract tool name" data-desc="Reads the tool name from the JSON-RPC params object.&#10;The tool name determines which calendar or event operation to perform.">
+  <rect x="250" y="952" width="200" height="44" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="952" dy="27" class="node-text">Extract tool name</text>
+</g>
+
+<!-- Arrow: Process bottom (350,996) to Process top (350,1056). gap=60 -->
+<line x1="350" y1="996" x2="350" y2="1056" class="arrow"/>
+
+<!-- ================================================================ -->
+<!-- Process: Tool dispatch and execute. x=210, y=1056, w=280, h=56  -->
+<!-- ================================================================ -->
+<g class="node" data-title="Dispatch and execute tool" data-desc="Routes to one of the available MCP tools based on the tool name.&#10;Full mode provides 12 tools: list_calendars, get_calendar, create_calendar, delete_calendar, create_event, get_event, update_event, delete_event, query_events, share_calendar, unshare_calendar, and list_shared_calendars.&#10;Simple mode provides 3 tools: add, delete, and list.&#10;The tool executes with the user_id from the authenticated token.">
+  <rect x="210" y="1056" width="280" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1056" dy="22" class="node-text">Dispatch and execute tool</text>
+  <text x="350" y="1056" dy="38" class="node-sub">12 full-mode or 3 simple-mode tools</text>
+</g>
+
+<!-- Arrow: Process bottom (350,1112) to Decision top (350,1172). gap=60 -->
+<line x1="350" y1="1112" x2="350" y2="1172" class="arrow"/>
+
+<!-- ================================================================ -->
+<!-- Decision: Tool succeeded? cy=1212, top=1172, bottom=1252        -->
+<!-- ================================================================ -->
+<g class="node" data-title="Tool execution succeeded?" data-desc="Checks whether the tool completed successfully or returned an error.&#10;Both outcomes produce a JSON-RPC response, but error results include an isError flag so the client knows something went wrong.">
+  <polygon points="350,1172 460,1212 350,1252 240,1212"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1208" dy="4" class="decision-text">Tool</text>
+  <text x="350" y="1222" dy="4" class="decision-text">succeeded?</text>
+</g>
+
+<!-- No: right from (460,1212) to error result. cx=640, rx=100, left=540. gap=80 -->
+<line x1="460" y1="1212" x2="540" y2="1212" class="arrow-no"/>
+<text x="466" y="1206" class="no-label">No</text>
+
+<g class="node" data-title="JSON-RPC result (isError=true)" data-desc="The tool encountered an error during execution.&#10;A JSON-RPC result is returned with isError set to true and the error message in the content.&#10;Common errors include invalid parameters, missing resources, or permission failures.">
+  <ellipse cx="640" cy="1212" rx="100" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="640" y="1206" dy="4" class="node-text">JSON-RPC result</text>
+  <text x="640" y="1222" dy="4" class="node-sub">isError=true</text>
+</g>
+
+<!-- Yes: down from (350,1252) to Success top (350,1312). gap=60 -->
+<line x1="350" y1="1252" x2="350" y2="1312" class="arrow-yes"/>
+<text x="360" y="1286" class="yes-label">Yes</text>
+
+<!-- ================================================================ -->
+<!-- Success: JSON-RPC result. cx=350, cy=1336, rx=100, ry=24        -->
+<!-- top=1312, bottom=1360                                           -->
+<!-- ================================================================ -->
+<g class="node" data-title="JSON-RPC result (success)" data-desc="The tool executed successfully.&#10;A JSON-RPC result is returned containing the tool's output, such as calendar data, event details, or confirmation of the operation.">
+  <ellipse cx="350" cy="1336" rx="100" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1330" dy="4" class="node-text">JSON-RPC result</text>
+  <text x="350" y="1346" dy="4" class="node-sub">Tool output</text>
+</g>
+
+<!-- Arrow: Success bottom (350,1360) to END top (350,1420). gap=60 -->
+<line x1="350" y1="1360" x2="350" y2="1420" class="arrow"/>
+
+<!-- ================================================================ -->
+<!-- END: cx=350, cy=1440, rx=40, ry=20. top=1420, bottom=1460       -->
+<!-- ================================================================ -->
+<g class="node" data-title="END" data-desc="End of MCP request processing.">
+  <ellipse cx="350" cy="1440" rx="40" ry="20" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1440" dy="5" class="node-text">END</text>
+</g>
+
+<!-- Popup -->
+<foreignObject id="popup" class="popup-container" x="0" y="0" width="340" height="200">
+  <div xmlns="http://www.w3.org/1999/xhtml" style="font:12px/1.5 sans-serif;color:#333;
+       background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);
+       padding:12px 16px;position:relative;max-height:188px;overflow-y:auto;">
+    <div id="popup-close" style="position:absolute;top:6px;right:10px;cursor:pointer;
+         font:bold 16px sans-serif;color:#999;line-height:1;">X</div>
+    <div id="popup-title" style="font:bold 13px sans-serif;color:#222;margin-bottom:6px;
+         padding-right:20px;"></div>
+    <div id="popup-desc" style="font:12px/1.5 sans-serif;color:#555;white-space:pre-wrap;"></div>
+  </div>
+</foreignObject>
+
+<script><![CDATA[
+(function(){
+  var popup=document.getElementById('popup');
+  var pTitle=document.getElementById('popup-title');
+  var pDesc=document.getElementById('popup-desc');
+  var pClose=document.getElementById('popup-close');
+  var svg=popup.ownerSVGElement;
+  document.querySelectorAll('.node').forEach(function(n){
+    n.addEventListener('click',function(e){
+      e.stopPropagation();
+      pTitle.textContent=n.dataset.title;
+      pDesc.textContent=n.dataset.desc;
+      var b=n.getBBox();
+      var x=Math.min(Math.max(b.x+b.width/2-170,10),svg.viewBox.baseVal.width-350);
+      var y=b.y-210;
+      if(y<10) y=b.y+b.height+10;
+      popup.setAttribute('x',x);
+      popup.setAttribute('y',y);
+      popup.style.display='block';
+      popup.classList.add('visible');
+    });
+  });
+  function hidePopup(){popup.classList.remove('visible');popup.style.display='none';}
+  pClose.addEventListener('click',function(e){e.stopPropagation();hidePopup();});
+  svg.addEventListener('click',function(){hidePopup();});
+})();
+]]></script>
+
+<!-- LEGEND: LX=140, LY=1520. bottom=1730. canvas=1770 -->
+<!-- LX = (800 - 520) / 2 = 140 -->
+<!-- LY = 1460 + 60 = 1520 -->
+<!-- canvas = 1520 + 210 + 40 = 1770. Using 2260 was overestimate, adjusting. -->
+<!-- Actually let me recalc: END bottom=1460. LY=1460+60=1520. Legend bottom=1730. Canvas=1770. -->
+<rect x="140" y="1520" width="520" height="210" rx="8"
+      fill="#f8f9fa" stroke="#999" stroke-width="1.5"/>
+<text x="400" y="1542" class="label-text">Legend</text>
+
+<!-- Left column -->
+<ellipse cx="170" cy="1570" rx="14" ry="10" fill="url(#startGrad)"/>
+<text x="192" y="1574" class="legend-text">Start / End</text>
+
+<rect x="156" y="1592" width="28" height="16" rx="3" fill="url(#processGrad)"/>
+<text x="192" y="1604" class="legend-text">Process</text>
+
+<polygon points="170,1620 182,1630 170,1640 158,1630"
+         fill="url(#decisionGrad)"/>
+<text x="192" y="1634" class="legend-text">Decision</text>
+
+<ellipse cx="170" cy="1660" rx="14" ry="10" fill="url(#endGrad)"/>
+<text x="192" y="1664" class="legend-text">Success response</text>
+
+<ellipse cx="170" cy="1690" rx="14" ry="10" fill="url(#errorGrad)"/>
+<text x="192" y="1694" class="legend-text">Error response</text>
+
+<!-- Right column -->
+<line x1="430" y1="1570" x2="460" y2="1570" class="arrow-yes"/>
+<text x="470" y="1574" class="legend-text">Yes / true path</text>
+
+<line x1="430" y1="1600" x2="460" y2="1600" class="arrow-no"/>
+<text x="470" y="1604" class="legend-text">No / false path</text>
+
+<line x1="430" y1="1630" x2="460" y2="1630" class="arrow"/>
+<text x="470" y="1634" class="legend-text">Main flow / continue</text>
+
+</svg>

@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="762" viewBox="0 0 700 762">
+<defs>
+  <style>
+    .title        { font: bold 20px sans-serif; fill: #333; text-anchor: middle; }
+    .node-text    { font: bold 12px sans-serif; fill: #fff; text-anchor: middle; }
+    .node-sub     { font: 10px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+    .decision-text{ font: bold 11px sans-serif; fill: #fff; text-anchor: middle; }
+    .label-text   { font: bold 11px sans-serif; fill: #444; text-anchor: middle; }
+    .yes-label    { font: bold 11px sans-serif; fill: #2d6a4f; }
+    .no-label     { font: bold 11px sans-serif; fill: #c1292e; }
+    .arrow        { stroke: #444;    stroke-width: 1.8; fill: none; marker-end: url(#arr); }
+    .arrow-yes    { stroke: #2d6a4f; stroke-width: 1.8; fill: none; marker-end: url(#arr-yes); }
+    .arrow-no     { stroke: #c1292e; stroke-width: 1.8; fill: none; marker-end: url(#arr-no); }
+    .legend-text  { font: 11px sans-serif; fill: #333; }
+    .node { cursor: pointer; }
+    .popup-container { display: none; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+    .popup-container.visible { display: block; pointer-events: auto; opacity: 1; }
+  </style>
+  <marker id="arr"     markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#444"/>
+  </marker>
+  <marker id="arr-yes" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#2d6a4f"/>
+  </marker>
+  <marker id="arr-no"  markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#c1292e"/>
+  </marker>
+  <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+    <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.15"/>
+  </filter>
+  <linearGradient id="startGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#5a9fd4"/>
+    <stop offset="100%" stop-color="#4a90d9"/>
+  </linearGradient>
+  <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#6b9def"/>
+    <stop offset="100%" stop-color="#5b8def"/>
+  </linearGradient>
+  <linearGradient id="decisionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#f0a14a"/>
+    <stop offset="100%" stop-color="#e8913a"/>
+  </linearGradient>
+  <linearGradient id="endGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#2ebd6a"/>
+    <stop offset="100%" stop-color="#27ae60"/>
+  </linearGradient>
+  <linearGradient id="errorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#f05c4c"/>
+    <stop offset="100%" stop-color="#e74c3c"/>
+  </linearGradient>
+</defs>
+
+<!-- Background -->
+<rect width="700" height="762" fill="#fafbfc" rx="8"/>
+
+<!-- Title -->
+<text x="350" y="35" class="title">Well-Known Discovery Flow</text>
+
+<!-- START: cx=280, cy=80, rx=112, ry=24. top=56, bottom=104 -->
+<g class="node" data-title="Incoming Request" data-desc="Any HTTP method sent to /.well-known/caldav&#10;This is the standard CalDAV discovery endpoint per RFC 6764.&#10;Clients (including Apple Calendar) use this URL to locate the CalDAV server root.">
+  <ellipse cx="280" cy="80" rx="112" ry="24" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="280" y="74" dy="4" class="node-text">Request</text>
+  <text x="280" y="90" dy="4" class="node-sub">/.well-known/caldav</text>
+</g>
+
+<!-- Arrow: START bottom (280,104) to OPTIONS diamond top (280,164). gap=60 -->
+<line x1="280" y1="104" x2="280" y2="164" class="arrow"/>
+
+<!-- OPTIONS diamond: cx=280, cy=204, dx=110, dy=40. top=164, bottom=244, left=170, right=390 -->
+<g class="node" data-title="Is method OPTIONS?" data-desc="Check the HTTP method of the incoming request.&#10;OPTIONS requests return DAV compliance headers without redirecting.&#10;All other methods (GET, PROPFIND, etc.) proceed to the 301 redirect to /caldav/.">
+  <polygon points="280,164 390,204 280,244 170,204"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="280" y="200" dy="4" class="decision-text">Is method</text>
+  <text x="280" y="214" dy="4" class="decision-text">OPTIONS?</text>
+</g>
+
+<!-- Yes: right from (390,204) to ellipse cx=560,rx=80 left border=480. gap=90 -->
+<line x1="390" y1="204" x2="480" y2="204" class="arrow-yes"/>
+<text x="396" y="198" class="yes-label">Yes</text>
+
+<!-- 200 OK terminal: cx=560, cy=204, rx=80, ry=24 -->
+<g class="node" data-title="Return 200 OK" data-desc="Responds with DAV compliance and allowed method headers so the client knows this is a CalDAV-capable server.&#10;No authentication is required for OPTIONS requests.">
+  <ellipse cx="560" cy="204" rx="80" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="560" y="198" dy="4" class="node-text">Return 200 OK</text>
+  <text x="560" y="214" dy="4" class="node-sub">DAV headers</text>
+</g>
+
+<!-- No: down from (280,244) to 301 terminal top (280,304). gap=60. RED arrow-no -->
+<line x1="280" y1="244" x2="280" y2="304" class="arrow-no"/>
+<text x="290" y="278" class="no-label">No</text>
+
+<!-- 301 terminal: cx=280, cy=328, rx=100, ry=24. top=304, bottom=352 -->
+<g class="node" data-title="Return 301 Moved Permanently" data-desc="Redirects the client to the CalDAV root at /caldav/ with a permanent redirect.&#10;DAV headers are included so the client knows the target is CalDAV-capable.&#10;The client follows this redirect to begin PROPFIND-based discovery.">
+  <ellipse cx="280" cy="328" rx="100" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="280" y="322" dy="4" class="node-text">Return 301</text>
+  <text x="280" y="338" dy="4" class="node-sub">Redirect to /caldav/</text>
+</g>
+
+<!-- Arrow: 301 bottom (280,352) to END top (280,412). gap=60 -->
+<line x1="280" y1="352" x2="280" y2="412" class="arrow"/>
+
+<!-- END terminal: cx=280, cy=432, rx=40, ry=20. top=412, bottom=452 -->
+<g class="node" data-title="END" data-desc="End of request processing.">
+  <ellipse cx="280" cy="432" rx="40" ry="20" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="280" y="432" dy="5" class="node-text">END</text>
+</g>
+
+<!-- Popup -->
+<foreignObject id="popup" class="popup-container" x="0" y="0" width="340" height="200">
+  <div xmlns="http://www.w3.org/1999/xhtml" style="font:12px/1.5 sans-serif;color:#333;
+       background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);
+       padding:12px 16px;position:relative;max-height:188px;overflow-y:auto;">
+    <div id="popup-close" style="position:absolute;top:6px;right:10px;cursor:pointer;
+         font:bold 16px sans-serif;color:#999;line-height:1;">X</div>
+    <div id="popup-title" style="font:bold 13px sans-serif;color:#222;margin-bottom:6px;
+         padding-right:20px;"></div>
+    <div id="popup-desc" style="font:12px/1.5 sans-serif;color:#555;white-space:pre-wrap;"></div>
+  </div>
+</foreignObject>
+
+<script><![CDATA[
+(function(){
+  var popup=document.getElementById('popup');
+  var pTitle=document.getElementById('popup-title');
+  var pDesc=document.getElementById('popup-desc');
+  var pClose=document.getElementById('popup-close');
+  var svg=popup.ownerSVGElement;
+  document.querySelectorAll('.node').forEach(function(n){
+    n.addEventListener('click',function(e){
+      e.stopPropagation();
+      pTitle.textContent=n.dataset.title;
+      pDesc.textContent=n.dataset.desc;
+      var b=n.getBBox();
+      var x=Math.min(Math.max(b.x+b.width/2-170,10),svg.viewBox.baseVal.width-350);
+      var y=b.y-210;
+      if(y<10) y=b.y+b.height+10;
+      popup.setAttribute('x',x);
+      popup.setAttribute('y',y);
+      popup.style.display='block';
+      popup.classList.add('visible');
+    });
+  });
+  function hidePopup(){popup.classList.remove('visible');popup.style.display='none';}
+  pClose.addEventListener('click',function(e){e.stopPropagation();hidePopup();});
+  svg.addEventListener('click',function(){hidePopup();});
+})();
+]]></script>
+
+<!-- LEGEND: LX=90, LY=512. bottom=722. canvas=762 -->
+<rect x="90" y="512" width="520" height="210" rx="8"
+      fill="#f8f9fa" stroke="#999" stroke-width="1.5"/>
+<text x="350" y="534" class="label-text">Legend</text>
+
+<!-- Left column -->
+<ellipse cx="120" cy="562" rx="14" ry="10" fill="url(#startGrad)"/>
+<text x="142" y="566" class="legend-text">Start / End</text>
+
+<rect x="106" y="584" width="28" height="16" rx="3" fill="url(#processGrad)"/>
+<text x="142" y="596" class="legend-text">Process</text>
+
+<polygon points="120,612 132,622 120,632 108,622"
+         fill="url(#decisionGrad)"/>
+<text x="142" y="626" class="legend-text">Decision</text>
+
+<ellipse cx="120" cy="652" rx="14" ry="10" fill="url(#endGrad)"/>
+<text x="142" y="656" class="legend-text">Success response</text>
+
+<ellipse cx="120" cy="682" rx="14" ry="10" fill="url(#errorGrad)"/>
+<text x="142" y="686" class="legend-text">Error response</text>
+
+<!-- Right column -->
+<line x1="380" y1="562" x2="410" y2="562" class="arrow-yes"/>
+<text x="420" y="566" class="legend-text">Yes / true path</text>
+
+<line x1="380" y1="592" x2="410" y2="592" class="arrow-no"/>
+<text x="420" y="596" class="legend-text">No / false path</text>
+
+<line x1="380" y1="622" x2="410" y2="622" class="arrow"/>
+<text x="420" y="626" class="legend-text">Main flow / continue</text>
+
+</svg>

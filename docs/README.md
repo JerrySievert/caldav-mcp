@@ -29,30 +29,21 @@ A self-hosted CalDAV server with MCP (Model Context Protocol) integration, built
 
 ## Diagrams
 
-All diagrams are in [docs/images/](images/) as hand-crafted SVG files.
-
-### Architecture Diagrams
+All diagrams are in [`docs/images/`](images/) as SVG files. See the [images README](images/README.md) for the full index.
 
 | Diagram | Description |
 |---------|-------------|
-| [Architecture Overview](images/architecture-overview.svg) | System components, ports, and data flow |
-| [Database Schema](images/database-schema.svg) | Entity-relationship diagram for all 6 tables |
-
-### Flow Diagrams
-
-| Diagram | Description |
-|---------|-------------|
-| [Authentication Strategies](images/flow-authentication.svg) | All 3 auth strategies side by side (inline_auth, auth_or_path_user, bearer) |
+| [Database Schema](images/schema.svg) | Entity-relationship diagram for all 6 tables |
+| [Authentication Strategies](images/flow-authentication.svg) | All 3 auth strategies side by side |
 | [Well-Known & Discovery](images/flow-wellknown-discovery.svg) | `/.well-known/caldav` and root discovery endpoints |
-| [PROPFIND](images/flow-propfind.svg) | Property find at all URL levels (root, principal, home, collection, email) |
-| [PUT Event](images/flow-put-event.svg) | Create/update events with ETag support |
+| [PROPFIND](images/flow-propfind.svg) | Property find across all 5 URL levels |
+| [PUT Event](images/flow-put-event.svg) | Create/update events with ETag and If-Match support |
 | [GET Event](images/flow-get-event.svg) | Retrieve calendar objects |
 | [DELETE](images/flow-delete.svg) | Delete objects and calendars |
 | [MKCALENDAR](images/flow-mkcalendar.svg) | Calendar creation |
 | [PROPPATCH](images/flow-proppatch.svg) | Calendar property updates |
 | [REPORT](images/flow-report.svg) | calendar-multiget, calendar-query, and sync-collection |
 | [MCP Request](images/flow-mcp-request.svg) | MCP JSON-RPC request handling on port 5233 |
-| [Apple Calendar](images/flow-apple-calendar.svg) | macOS 15.x accountsd/dataaccessd discovery and sync sequence |
 
 ## Quick Start
 

@@ -1,0 +1,279 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="1574" viewBox="0 0 760 1574">
+<defs>
+  <style>
+    .title        { font: bold 20px sans-serif; fill: #333; text-anchor: middle; }
+    .node-text    { font: bold 12px sans-serif; fill: #fff; text-anchor: middle; }
+    .node-sub     { font: 10px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+    .decision-text{ font: bold 11px sans-serif; fill: #fff; text-anchor: middle; }
+    .label-text   { font: bold 11px sans-serif; fill: #444; text-anchor: middle; }
+    .yes-label    { font: bold 11px sans-serif; fill: #2d6a4f; }
+    .no-label     { font: bold 11px sans-serif; fill: #c1292e; }
+    .arrow        { stroke: #444;    stroke-width: 1.8; fill: none; marker-end: url(#arr); }
+    .arrow-yes    { stroke: #2d6a4f; stroke-width: 1.8; fill: none; marker-end: url(#arr-yes); }
+    .arrow-no     { stroke: #c1292e; stroke-width: 1.8; fill: none; marker-end: url(#arr-no); }
+    .legend-text  { font: 11px sans-serif; fill: #333; }
+    .node { cursor: pointer; }
+    .popup-container { display: none; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+    .popup-container.visible { display: block; pointer-events: auto; opacity: 1; }
+  </style>
+  <marker id="arr"     markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#444"/>
+  </marker>
+  <marker id="arr-yes" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#2d6a4f"/>
+  </marker>
+  <marker id="arr-no"  markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#c1292e"/>
+  </marker>
+  <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+    <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.15"/>
+  </filter>
+  <linearGradient id="startGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#5a9fd4"/>
+    <stop offset="100%" stop-color="#4a90d9"/>
+  </linearGradient>
+  <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#6b9def"/>
+    <stop offset="100%" stop-color="#5b8def"/>
+  </linearGradient>
+  <linearGradient id="decisionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#f0a14a"/>
+    <stop offset="100%" stop-color="#e8913a"/>
+  </linearGradient>
+  <linearGradient id="endGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#2ebd6a"/>
+    <stop offset="100%" stop-color="#27ae60"/>
+  </linearGradient>
+  <linearGradient id="errorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#f05c4c"/>
+    <stop offset="100%" stop-color="#e74c3c"/>
+  </linearGradient>
+</defs>
+
+<!-- Background -->
+<rect width="760" height="1574" fill="#fafbfc" rx="8"/>
+
+<!-- Title -->
+<text x="380" y="35" class="title">GET Event Flow</text>
+
+<!-- START: cx=350, cy=84, rx=125, ry=32. top=52, bottom=116 -->
+<g class="node" data-title="GET Request" data-desc="Client sends GET to /{username}/{calendar_id}/{uid}.ics&#10;Retrieves a single calendar object (VEVENT) as iCalendar data.&#10;Used by CalDAV clients to fetch individual events after discovery.">
+  <ellipse cx="350" cy="84" rx="125" ry="32" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="350" y="78" dy="4" class="node-text">GET Request</text>
+  <text x="350" y="96" dy="4" class="node-sub">/{username}/{calendar_id}/{uid}.ics</text>
+</g>
+
+<!-- Arrow: START bottom (350,116) to OPTIONS diamond top (350,176). gap=60 -->
+<line x1="350" y1="116" x2="350" y2="176" class="arrow"/>
+
+<!-- OPTIONS diamond: cx=350, cy=216, dx=110, dy=40. top=176, bottom=256, left=240, right=460 -->
+<g class="node" data-title="Is method OPTIONS?" data-desc="Check the HTTP method of the incoming request.&#10;OPTIONS requests return DAV compliance headers immediately.&#10;All other methods (GET in this flow) continue to authentication.">
+  <polygon points="350,176 460,216 350,256 240,216"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="212" dy="4" class="decision-text">Is method</text>
+  <text x="350" y="226" dy="4" class="decision-text">OPTIONS?</text>
+</g>
+
+<!-- OPTIONS Yes: left from (240,216) to ellipse cx=100,rx=80 right border=180. gap=60 -->
+<line x1="240" y1="216" x2="180" y2="216" class="arrow-yes"/>
+<text x="228" y="210" class="yes-label">Yes</text>
+
+<!-- OPTIONS Yes terminal: cx=100, cy=216, rx=80, ry=24 -->
+<g class="node" data-title="Return 200 OK" data-desc="Responds with DAV compliance and allowed method headers so the client knows this is a CalDAV-capable server.&#10;No authentication is required for OPTIONS requests.">
+  <ellipse cx="100" cy="216" rx="80" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="100" y="210" dy="4" class="node-text">Return 200 OK</text>
+  <text x="100" y="226" dy="4" class="node-sub">DAV headers</text>
+</g>
+
+<!-- OPTIONS No: down from (350,256) to auth rect top y=316. gap=60. RED arrow-no -->
+<line x1="350" y1="256" x2="350" y2="316" class="arrow-no"/>
+<text x="360" y="290" class="no-label">No</text>
+
+<!-- auth_or_path_user rect: x=223, y=316, w=254, h=56. cx=350, bottom=372 -->
+<g class="node" data-title="Call auth_or_path_user" data-desc="Authenticates the request using HTTP Basic Auth if credentials are provided, verifying the password with Argon2id.&#10;Falls back to resolving the user from the URL path if no credentials are sent.&#10;The path fallback exists because Apple Calendar does not send credentials to /caldav/users/* URLs.">
+  <rect x="223" y="316" width="254" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="316" dy="22" class="node-text">Call auth_or_path_user</text>
+  <text x="350" y="316" dy="38" class="node-sub">HTTP Basic Auth / {username} fallback</text>
+</g>
+
+<!-- Arrow: auth rect bottom (350,372) to User diamond top (350,432). gap=60 -->
+<line x1="350" y1="372" x2="350" y2="432" class="arrow"/>
+
+<!-- User resolved diamond: cx=350, cy=472, dx=110, dy=40. top=432, bottom=512, left=240, right=460 -->
+<g class="node" data-title="User resolved?" data-desc="Checks whether a valid user was identified through credentials or the URL path.&#10;If yes, the authenticated user is available for subsequent authorization checks.&#10;If no, the request is rejected as unauthorized.">
+  <polygon points="350,432 460,472 350,512 240,472"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="472" dy="4" class="decision-text">User resolved?</text>
+</g>
+
+<!-- User No: right from (460,472) to ellipse cx=620,rx=80 left border=540. gap=80 -->
+<line x1="460" y1="472" x2="540" y2="472" class="arrow-no"/>
+<text x="466" y="466" class="no-label">No</text>
+
+<!-- User No terminal: cx=620, cy=472, rx=80, ry=24 -->
+<g class="node" data-title="Return 401 Unauthorized" data-desc="No valid user could be identified from the request.&#10;The response prompts the client to provide Basic Auth credentials.&#10;The same error is returned for invalid credentials and unknown usernames to prevent enumeration.">
+  <ellipse cx="620" cy="472" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="466" dy="4" class="node-text">Return 401</text>
+  <text x="620" y="482" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- User Yes: down from (350,512) to calendar rect top y=572. gap=60 -->
+<line x1="350" y1="512" x2="350" y2="572" class="arrow-yes"/>
+<text x="360" y="546" class="yes-label">Yes</text>
+
+<!-- Look up calendar rect: x=260, y=572, w=180, h=56. cx=350, bottom=628 -->
+<g class="node" data-title="Look up calendar" data-desc="Looks up the calendar by its ID from the URL path.&#10;If the calendar exists, it is used for the subsequent access check.">
+  <rect x="260" y="572" width="180" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="572" dy="22" class="node-text">Look up calendar</text>
+  <text x="350" y="572" dy="38" class="node-sub">by {calendar_id}</text>
+</g>
+
+<!-- Arrow: calendar rect bottom (350,628) to calendar diamond top (350,688). gap=60 -->
+<line x1="350" y1="628" x2="350" y2="688" class="arrow"/>
+
+<!-- Calendar exists diamond: cx=350, cy=728, dx=110, dy=40. top=688, bottom=768, left=240, right=460 -->
+<g class="node" data-title="Calendar exists &amp; belongs to user?" data-desc="Verifies that the calendar exists and that the authenticated user is either the owner or has been granted shared access.&#10;If either check fails, the request is denied.">
+  <polygon points="350,688 460,728 350,768 240,728"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="724" dy="4" class="decision-text">Calendar exists</text>
+  <text x="350" y="738" dy="4" class="decision-text">&amp; belongs to user?</text>
+</g>
+
+<!-- Calendar No: right from (460,728) to ellipse cx=620,rx=80 left border=540. gap=80 -->
+<line x1="460" y1="728" x2="540" y2="728" class="arrow-no"/>
+<text x="466" y="722" class="no-label">No</text>
+
+<!-- Calendar No terminal: cx=620, cy=728, rx=80, ry=24 -->
+<g class="node" data-title="Return 403 Forbidden" data-desc="The calendar does not exist or does not belong to the authenticated user.&#10;Uses 403 (not 404) to prevent calendar ID enumeration.&#10;The user cannot access calendars owned by other users unless shared.">
+  <ellipse cx="620" cy="728" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="722" dy="4" class="node-text">Return 403</text>
+  <text x="620" y="738" dy="4" class="node-sub">Forbidden</text>
+</g>
+
+<!-- Calendar Yes: down from (350,768) to object rect top y=828. gap=60 -->
+<line x1="350" y1="768" x2="350" y2="828" class="arrow-yes"/>
+<text x="360" y="802" class="yes-label">Yes</text>
+
+<!-- Look up object rect: x=240, y=828, w=220, h=56. cx=350, bottom=884 -->
+<g class="node" data-title="Look up calendar object" data-desc="Queries the database for a calendar object matching the UID from the URL filename.&#10;The UID is extracted by stripping the .ics extension from the filename.">
+  <rect x="240" y="828" width="220" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="828" dy="22" class="node-text">Look up calendar object</text>
+  <text x="350" y="828" dy="38" class="node-sub">by {uid} in calendar</text>
+</g>
+
+<!-- Arrow: object rect bottom (350,884) to object diamond top (350,944). gap=60 -->
+<line x1="350" y1="884" x2="350" y2="944" class="arrow"/>
+
+<!-- Object found diamond: cx=350, cy=984, dx=110, dy=40. top=944, bottom=1024, left=240, right=460 -->
+<g class="node" data-title="Object found?" data-desc="Checks whether the database returned a matching calendar object.&#10;If found, the event's iCalendar data and ETag are available to return.&#10;If not, the request fails with a 404.">
+  <polygon points="350,944 460,984 350,1024 240,984"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="984" dy="4" class="decision-text">Object found?</text>
+</g>
+
+<!-- Object No: right from (460,984) to ellipse cx=620,rx=80 left border=540. gap=80 -->
+<line x1="460" y1="984" x2="540" y2="984" class="arrow-no"/>
+<text x="466" y="978" class="no-label">No</text>
+
+<!-- Object No terminal: cx=620, cy=984, rx=80, ry=24 -->
+<g class="node" data-title="Return 404 Not Found" data-desc="No calendar object with the requested UID exists in this calendar.&#10;Response body: 'Object not found'">
+  <ellipse cx="620" cy="984" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="978" dy="4" class="node-text">Return 404</text>
+  <text x="620" y="994" dy="4" class="node-sub">Not Found</text>
+</g>
+
+<!-- Object Yes: down from (350,1024) to success ellipse top (350,1084). gap=60 -->
+<line x1="350" y1="1024" x2="350" y2="1084" class="arrow-yes"/>
+<text x="360" y="1058" class="yes-label">Yes</text>
+
+<!-- Success terminal: cx=350, cy=1124, rx=140, ry=40. top=1084, bottom=1164 -->
+<g class="node" data-title="Return 200 OK" data-desc="Returns the event's iCalendar data with an ETag header for conditional updates.&#10;The ETag is a SHA-256 hash of the data, enabling clients to use If-Match on subsequent PUT requests.">
+  <ellipse cx="350" cy="1124" rx="140" ry="40" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1112" dy="4" class="node-text">Return 200 OK</text>
+  <text x="350" y="1128" dy="4" class="node-sub">Content-Type: text/calendar; charset=utf-8</text>
+  <text x="350" y="1142" dy="4" class="node-sub">ETag: "{etag}" | Body: .ics data</text>
+</g>
+
+<!-- Arrow: success bottom (350,1164) to END top (350,1224). gap=60 -->
+<line x1="350" y1="1164" x2="350" y2="1224" class="arrow"/>
+
+<!-- END terminal: cx=350, cy=1244, rx=40, ry=20. top=1224, bottom=1264 -->
+<g class="node" data-title="END" data-desc="End of request processing.">
+  <ellipse cx="350" cy="1244" rx="40" ry="20" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1244" dy="5" class="node-text">END</text>
+</g>
+
+<!-- Popup -->
+<foreignObject id="popup" class="popup-container" x="0" y="0" width="340" height="200">
+  <div xmlns="http://www.w3.org/1999/xhtml" style="font:12px/1.5 sans-serif;color:#333;
+       background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);
+       padding:12px 16px;position:relative;max-height:188px;overflow-y:auto;">
+    <div id="popup-close" style="position:absolute;top:6px;right:10px;cursor:pointer;
+         font:bold 16px sans-serif;color:#999;line-height:1;">X</div>
+    <div id="popup-title" style="font:bold 13px sans-serif;color:#222;margin-bottom:6px;
+         padding-right:20px;"></div>
+    <div id="popup-desc" style="font:12px/1.5 sans-serif;color:#555;white-space:pre-wrap;"></div>
+  </div>
+</foreignObject>
+
+<script><![CDATA[
+(function(){
+  var popup=document.getElementById('popup');
+  var pTitle=document.getElementById('popup-title');
+  var pDesc=document.getElementById('popup-desc');
+  var pClose=document.getElementById('popup-close');
+  var svg=popup.ownerSVGElement;
+  document.querySelectorAll('.node').forEach(function(n){
+    n.addEventListener('click',function(e){
+      e.stopPropagation();
+      pTitle.textContent=n.dataset.title;
+      pDesc.textContent=n.dataset.desc;
+      var b=n.getBBox();
+      var x=Math.min(Math.max(b.x+b.width/2-170,10),svg.viewBox.baseVal.width-350);
+      var y=b.y-210;
+      if(y<10) y=b.y+b.height+10;
+      popup.setAttribute('x',x);
+      popup.setAttribute('y',y);
+      popup.style.display='block';
+      popup.classList.add('visible');
+    });
+  });
+  function hidePopup(){popup.classList.remove('visible');popup.style.display='none';}
+  pClose.addEventListener('click',function(e){e.stopPropagation();hidePopup();});
+  svg.addEventListener('click',function(){hidePopup();});
+})();
+]]></script>
+
+<!-- LEGEND: LX=120, LY=1324. bottom=1534. canvas=1574 -->
+<rect x="120" y="1324" width="520" height="210" rx="8"
+      fill="#f8f9fa" stroke="#999" stroke-width="1.5"/>
+<text x="380" y="1346" class="label-text">Legend</text>
+
+<!-- Left column -->
+<ellipse cx="150" cy="1374" rx="14" ry="10" fill="url(#startGrad)"/>
+<text x="172" y="1378" class="legend-text">Start / End</text>
+
+<rect x="136" y="1396" width="28" height="16" rx="3" fill="url(#processGrad)"/>
+<text x="172" y="1408" class="legend-text">Process</text>
+
+<polygon points="150,1424 162,1434 150,1444 138,1434"
+         fill="url(#decisionGrad)"/>
+<text x="172" y="1438" class="legend-text">Decision</text>
+
+<ellipse cx="150" cy="1464" rx="14" ry="10" fill="url(#endGrad)"/>
+<text x="172" y="1468" class="legend-text">Success response</text>
+
+<ellipse cx="150" cy="1494" rx="14" ry="10" fill="url(#errorGrad)"/>
+<text x="172" y="1498" class="legend-text">Error response</text>
+
+<!-- Right column -->
+<line x1="410" y1="1374" x2="440" y2="1374" class="arrow-yes"/>
+<text x="450" y="1378" class="legend-text">Yes / true path</text>
+
+<line x1="410" y1="1404" x2="440" y2="1404" class="arrow-no"/>
+<text x="450" y="1408" class="legend-text">No / false path</text>
+
+<line x1="410" y1="1434" x2="440" y2="1434" class="arrow"/>
+<text x="450" y="1438" class="legend-text">Main flow / continue</text>
+
+</svg>

@@ -1,0 +1,390 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="1682" viewBox="0 0 760 1682">
+<defs>
+  <style>
+    .title        { font: bold 20px sans-serif; fill: #333; text-anchor: middle; }
+    .node-text    { font: bold 12px sans-serif; fill: #fff; text-anchor: middle; }
+    .node-sub     { font: 10px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+    .decision-text{ font: bold 11px sans-serif; fill: #fff; text-anchor: middle; }
+    .label-text   { font: bold 11px sans-serif; fill: #444; text-anchor: middle; }
+    .yes-label    { font: bold 11px sans-serif; fill: #2d6a4f; }
+    .no-label     { font: bold 11px sans-serif; fill: #c1292e; }
+    .arrow        { stroke: #444;    stroke-width: 1.8; fill: none; marker-end: url(#arr); }
+    .arrow-yes    { stroke: #2d6a4f; stroke-width: 1.8; fill: none; marker-end: url(#arr-yes); }
+    .arrow-no     { stroke: #c1292e; stroke-width: 1.8; fill: none; marker-end: url(#arr-no); }
+    .legend-text  { font: 11px sans-serif; fill: #333; }
+    .node { cursor: pointer; }
+    .popup-container { display: none; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+    .popup-container.visible { display: block; pointer-events: auto; opacity: 1; }
+  </style>
+  <marker id="arr"     markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#444"/>
+  </marker>
+  <marker id="arr-yes" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#2d6a4f"/>
+  </marker>
+  <marker id="arr-no"  markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#c1292e"/>
+  </marker>
+  <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+    <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.15"/>
+  </filter>
+  <linearGradient id="startGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#5a9fd4"/>
+    <stop offset="100%" stop-color="#4a90d9"/>
+  </linearGradient>
+  <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#6b9def"/>
+    <stop offset="100%" stop-color="#5b8def"/>
+  </linearGradient>
+  <linearGradient id="decisionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#f0a14a"/>
+    <stop offset="100%" stop-color="#e8913a"/>
+  </linearGradient>
+  <linearGradient id="endGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#2ebd6a"/>
+    <stop offset="100%" stop-color="#27ae60"/>
+  </linearGradient>
+  <linearGradient id="errorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#f05c4c"/>
+    <stop offset="100%" stop-color="#e74c3c"/>
+  </linearGradient>
+</defs>
+
+<!-- Background -->
+<rect width="760" height="1682" fill="#fafbfc" rx="8"/>
+
+<!-- Title -->
+<text x="380" y="35" class="title">REPORT Flow</text>
+
+<!-- ============================================================ -->
+<!-- 1. START: cx=350, cy=84, rx=130, ry=32. top=52, bottom=116  -->
+<!-- ============================================================ -->
+<g class="node" data-title="REPORT Request" data-desc="Client sends a REPORT request to /{username}/{calendar_id}/.&#10;REPORT is used for calendar-multiget, calendar-query, and sync-collection.&#10;The request body contains XML specifying the report type and parameters.">
+  <ellipse cx="350" cy="84" rx="130" ry="32" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="350" y="78" dy="4" class="node-text">REPORT Request</text>
+  <text x="350" y="96" dy="4" class="node-sub">/{username}/{calendar_id}/</text>
+</g>
+
+<!-- Arrow: START bottom (350,116) to OPTIONS diamond top (350,176). gap=60 -->
+<line x1="350" y1="116" x2="350" y2="176" class="arrow"/>
+
+<!-- ============================================================ -->
+<!-- 2. OPTIONS? diamond: cx=350, cy=216, dx=110, dy=40           -->
+<!--    top=176, bottom=256, left=240, right=460                  -->
+<!-- ============================================================ -->
+<g class="node" data-title="Is method OPTIONS?" data-desc="Check the HTTP method of the incoming request.&#10;OPTIONS requests receive DAV compliance headers immediately without authentication.&#10;All other methods continue to the authentication step.">
+  <polygon points="350,176 460,216 350,256 240,216"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="212" dy="4" class="decision-text">OPTIONS?</text>
+</g>
+
+<!-- OPTIONS Yes: left from (240,216) to ellipse cx=100,rx=80 right border=180. gap=60 -->
+<line x1="240" y1="216" x2="180" y2="216" class="arrow-yes"/>
+<text x="228" y="210" class="yes-label">Yes</text>
+
+<!-- 2a. OPTIONS 200 OK: cx=100, cy=216, rx=80, ry=24 -->
+<g class="node" data-title="Return 200 OK" data-desc="Responds with DAV compliance and allowed method headers so the client knows this is a CalDAV-capable server.&#10;No authentication is required for OPTIONS requests.">
+  <ellipse cx="100" cy="216" rx="80" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="100" y="210" dy="4" class="node-text">200 OK</text>
+  <text x="100" y="226" dy="4" class="node-sub">DAV headers</text>
+</g>
+
+<!-- OPTIONS No: down from (350,256) to auth rect top y=316. gap=60 -->
+<line x1="350" y1="256" x2="350" y2="316" class="arrow-no"/>
+<text x="360" y="290" class="no-label">No</text>
+
+<!-- ============================================================ -->
+<!-- 3. auth_or_path_user: x=223, y=316, w=254, h=56. cx=350     -->
+<!--    bottom=372                                                -->
+<!-- ============================================================ -->
+<g class="node" data-title="Call auth_or_path_user" data-desc="Authenticates the request using HTTP Basic Auth if credentials are provided, verifying the password with Argon2id.&#10;Falls back to resolving the user from the {username} in the URL path if no credentials are sent.&#10;This fallback exists because Apple Calendar's dataaccessd does not send credentials to /caldav/users/* URLs.">
+  <rect x="223" y="316" width="254" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="316" dy="22" class="node-text">Call auth_or_path_user</text>
+  <text x="350" y="316" dy="38" class="node-sub">HTTP Basic Auth / {username} fallback</text>
+</g>
+
+<!-- Arrow: auth rect bottom (350,372) to User diamond top (350,432). gap=60 -->
+<line x1="350" y1="372" x2="350" y2="432" class="arrow"/>
+
+<!-- ============================================================ -->
+<!-- 4. User resolved? diamond: cx=350, cy=472, dx=110, dy=40     -->
+<!--    top=432, bottom=512, left=240, right=460                  -->
+<!-- ============================================================ -->
+<g class="node" data-title="User resolved?" data-desc="Checks whether a valid user was identified through credentials or the URL path.&#10;If yes, the authenticated user is available for subsequent authorization checks.&#10;If no, the request is rejected as unauthorized.">
+  <polygon points="350,432 460,472 350,512 240,472"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="472" dy="4" class="decision-text">User resolved?</text>
+</g>
+
+<!-- User No: right from (460,472) to ellipse cx=620,rx=80 left border=540. gap=80 -->
+<line x1="460" y1="472" x2="540" y2="472" class="arrow-no"/>
+<text x="466" y="466" class="no-label">No</text>
+
+<!-- 4a. 401 Unauthorized: cx=620, cy=472, rx=80, ry=24 -->
+<g class="node" data-title="Return 401 Unauthorized" data-desc="No valid user could be identified from the request.&#10;The response prompts the client to provide Basic Auth credentials.&#10;The same error is returned for invalid credentials and unknown usernames to prevent enumeration.">
+  <ellipse cx="620" cy="472" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="466" dy="4" class="node-text">401</text>
+  <text x="620" y="482" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- User Yes: down from (350,512) to calendar diamond top (350,572). gap=60 -->
+<line x1="350" y1="512" x2="350" y2="572" class="arrow-yes"/>
+<text x="360" y="546" class="yes-label">Yes</text>
+
+<!-- ============================================================ -->
+<!-- 5. Calendar access? diamond: cx=350, cy=612, dx=110, dy=40   -->
+<!--    top=572, bottom=652, left=240, right=460                  -->
+<!-- ============================================================ -->
+<g class="node" data-title="Calendar access?" data-desc="Verifies that the calendar identified by {calendar_id} exists and that the resolved user is either the owner or has been granted shared access.&#10;If the calendar does not exist or belongs to another user without sharing, the request is denied with 403.">
+  <polygon points="350,572 460,612 350,652 240,612"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="608" dy="4" class="decision-text">Calendar</text>
+  <text x="350" y="622" dy="4" class="decision-text">access?</text>
+</g>
+
+<!-- Calendar No: right from (460,612) to ellipse cx=620,rx=80 left border=540. gap=80 -->
+<line x1="460" y1="612" x2="540" y2="612" class="arrow-no"/>
+<text x="466" y="606" class="no-label">No</text>
+
+<!-- 5a. 403 Forbidden: cx=620, cy=612, rx=80, ry=24 -->
+<g class="node" data-title="Return 403 Forbidden" data-desc="The calendar does not exist or does not belong to the authenticated user.&#10;Uses 403 (not 404) to prevent calendar ID enumeration across users.&#10;The user cannot access calendars owned by other users unless explicitly shared.">
+  <ellipse cx="620" cy="612" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="606" dy="4" class="node-text">403</text>
+  <text x="620" y="622" dy="4" class="node-sub">Forbidden</text>
+</g>
+
+<!-- Calendar Yes: down from (350,652) to parse rect top y=712. gap=60 -->
+<line x1="350" y1="652" x2="350" y2="712" class="arrow-yes"/>
+<text x="360" y="686" class="yes-label">Yes</text>
+
+<!-- ============================================================ -->
+<!-- 6. Read and parse REPORT body: x=223, y=712, w=254, h=56     -->
+<!--    cx=350, bottom=768                                        -->
+<!-- ============================================================ -->
+<g class="node" data-title="Read and parse REPORT body" data-desc="Reads the XML request body and parses it to determine the report type and parameters.&#10;The body contains elements like calendar-multiget, calendar-query, or sync-collection, along with requested properties and optional filters.">
+  <rect x="213" y="712" width="274" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="712" dy="22" class="node-text">Read and parse REPORT body</text>
+  <text x="350" y="712" dy="38" class="node-sub">Extract report type and parameters</text>
+</g>
+
+<!-- Arrow: parse rect bottom (350,768) to parse diamond top (350,828). gap=60 -->
+<line x1="350" y1="768" x2="350" y2="828" class="arrow"/>
+
+<!-- ============================================================ -->
+<!-- 7. Parse succeeds? diamond: cx=350, cy=868, dx=110, dy=40    -->
+<!--    top=828, bottom=908, left=240, right=460                  -->
+<!-- ============================================================ -->
+<g class="node" data-title="Parse succeeds?" data-desc="Checks whether the XML body was parsed successfully and contains a recognized report type.&#10;If parsing fails or the body is malformed, the request is rejected with 400 Bad Request.">
+  <polygon points="350,828 460,868 350,908 240,868"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="864" dy="4" class="decision-text">Parse</text>
+  <text x="350" y="878" dy="4" class="decision-text">succeeds?</text>
+</g>
+
+<!-- Parse No: right from (460,868) to ellipse cx=620,rx=80 left border=540. gap=80 -->
+<line x1="460" y1="868" x2="540" y2="868" class="arrow-no"/>
+<text x="466" y="862" class="no-label">No</text>
+
+<!-- 7a. 400 Bad Request: cx=620, cy=868, rx=80, ry=24 -->
+<g class="node" data-title="Return 400 Bad Request" data-desc="The XML request body could not be parsed or does not contain a recognized REPORT type.&#10;This may occur if the body is missing, malformed, or specifies an unsupported report.">
+  <ellipse cx="620" cy="868" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="862" dy="4" class="node-text">400</text>
+  <text x="620" y="878" dy="4" class="node-sub">Bad Request</text>
+</g>
+
+<!-- Parse Yes: down from (350,908) to report type diamond top (350,968). gap=60 -->
+<line x1="350" y1="908" x2="350" y2="968" class="arrow-yes"/>
+<text x="360" y="942" class="yes-label">Yes</text>
+
+<!-- ============================================================ -->
+<!-- 8. Report type? diamond: cx=350, cy=1008, dx=110, dy=40      -->
+<!--    top=968, bottom=1048, left=240, right=460                 -->
+<!-- ============================================================ -->
+<g class="node" data-title="Which report type?" data-desc="Dispatches to the appropriate handler based on the report type found in the XML body.&#10;Three report types are supported: calendar-multiget (fetch specific events by href), calendar-query (search with optional time-range filter), and sync-collection (full or incremental sync using a sync-token).">
+  <polygon points="350,968 460,1008 350,1048 240,1008"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1004" dy="4" class="decision-text">Report</text>
+  <text x="350" y="1018" dy="4" class="decision-text">type?</text>
+</g>
+
+<!-- 3-way dispatch: all gray .arrow -->
+
+<!-- Left branch: from left vertex (240,1008) to calendar-multiget rect top (100,1108) -->
+<!-- Path: left to x=100, then down to y=1108 -->
+<path d="M240,1008 L100,1008 L100,1108" class="arrow" fill="none"/>
+<text x="168" y="1000" class="label-text">multiget</text>
+
+<!-- Down branch: from bottom vertex (350,1048) to calendar-query rect top (350,1108) -->
+<!-- gap=60 -->
+<line x1="350" y1="1048" x2="350" y2="1108" class="arrow"/>
+<text x="382" y="1082" class="label-text">query</text>
+
+<!-- Right branch: from right vertex (460,1008) to sync-collection rect top (600,1108) -->
+<!-- Path: right to x=600, then down to y=1108 -->
+<path d="M460,1008 L600,1008 L600,1108" class="arrow" fill="none"/>
+<text x="532" y="1000" class="label-text">sync</text>
+
+<!-- ============================================================ -->
+<!-- 9L. calendar-multiget: x=5, y=1108, w=190, h=56. cx=100     -->
+<!--     bottom=1164                                              -->
+<!-- ============================================================ -->
+<g class="node" data-title="calendar-multiget" data-desc="Fetches specific calendar objects by their href URLs.&#10;The client provides a list of hrefs in the request body, and the server returns the matching objects with their iCalendar data and ETags in a 207 Multi-Status response.">
+  <rect x="5" y="1108" width="190" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="100" y="1108" dy="22" class="node-text">calendar-multiget</text>
+  <text x="100" y="1108" dy="38" class="node-sub">Fetch objects by href list</text>
+</g>
+
+<!-- ============================================================ -->
+<!-- 9C. calendar-query: x=255, y=1108, w=190, h=56. cx=350      -->
+<!--     bottom=1164                                              -->
+<!-- ============================================================ -->
+<g class="node" data-title="calendar-query" data-desc="Queries calendar objects with an optional time-range filter.&#10;If a time range is specified, only events overlapping that range are returned.&#10;Without a filter, all objects in the calendar are returned in a 207 Multi-Status response.">
+  <rect x="255" y="1108" width="190" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1108" dy="22" class="node-text">calendar-query</text>
+  <text x="350" y="1108" dy="38" class="node-sub">Query objects (time range)</text>
+</g>
+
+<!-- ============================================================ -->
+<!-- 9R. sync-collection: x=502, y=1108, w=196, h=56. cx=600     -->
+<!--     bottom=1164                                              -->
+<!-- ============================================================ -->
+<g class="node" data-title="sync-collection" data-desc="Performs a full or incremental synchronization of the calendar collection.&#10;If the sync-token is empty, a full sync returns all objects with a new sync-token.&#10;If a sync-token is provided, a delta sync returns only changes (created, modified, deleted) since that token, along with a new token for the next sync.">
+  <rect x="502" y="1108" width="196" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="600" y="1108" dy="22" class="node-text">sync-collection</text>
+  <text x="600" y="1108" dy="38" class="node-sub">Full or delta sync by token</text>
+</g>
+
+<!-- Arrows from process rects to 207 ellipses. gap=60 each -->
+
+<!-- Left: (100,1164) to (100,1224) -->
+<line x1="100" y1="1164" x2="100" y2="1224" class="arrow"/>
+
+<!-- Center: (350,1164) to (350,1224) -->
+<line x1="350" y1="1164" x2="350" y2="1224" class="arrow"/>
+
+<!-- Right: (600,1164) to (600,1224) -->
+<line x1="600" y1="1164" x2="600" y2="1224" class="arrow"/>
+
+<!-- ============================================================ -->
+<!-- 10L. 207 Multi-Status: cx=100, cy=1248, rx=80, ry=24        -->
+<!--      top=1224, bottom=1272                                   -->
+<!-- ============================================================ -->
+<g class="node" data-title="207 Multi-Status (multiget)" data-desc="Returns the requested calendar objects in a DAV:multistatus response.&#10;Each object is wrapped in a DAV:response element containing its href, getetag property, and calendar-data (the full iCalendar content).">
+  <ellipse cx="100" cy="1248" rx="80" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="100" y="1242" dy="4" class="node-text">207</text>
+  <text x="100" y="1258" dy="4" class="node-sub">MULTI_STATUS</text>
+</g>
+
+<!-- ============================================================ -->
+<!-- 10C. 207 Multi-Status: cx=350, cy=1248, rx=80, ry=24        -->
+<!--      top=1224, bottom=1272                                   -->
+<!-- ============================================================ -->
+<g class="node" data-title="207 Multi-Status (query)" data-desc="Returns calendar objects matching the query in a DAV:multistatus response.&#10;Each matching object includes its href, getetag property, and calendar-data.&#10;If a time-range filter was specified, only events overlapping that range are included.">
+  <ellipse cx="350" cy="1248" rx="80" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1242" dy="4" class="node-text">207</text>
+  <text x="350" y="1258" dy="4" class="node-sub">MULTI_STATUS</text>
+</g>
+
+<!-- ============================================================ -->
+<!-- 10R. 207 Multi-Status: cx=600, cy=1248, rx=80, ry=24        -->
+<!--      top=1224, bottom=1272                                   -->
+<!-- ============================================================ -->
+<g class="node" data-title="207 Multi-Status (sync)" data-desc="Returns synchronization results in a DAV:multistatus response with a new sync-token.&#10;For full sync, all objects are returned. For delta sync, only created, modified, and deleted objects since the previous token are included.&#10;The new sync-token is a data: URI containing a UUID v7 for the client to use in the next sync request.">
+  <ellipse cx="600" cy="1248" rx="80" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="600" y="1242" dy="4" class="node-text">207</text>
+  <text x="600" y="1258" dy="4" class="node-sub">MULTI_STATUS</text>
+</g>
+
+<!-- Arrows from 207 ellipses to END -->
+
+<!-- Left: path from (100,1272) down to (100,1352) then right to (310,1352) = END left border (cx=350,rx=40 => left=310) -->
+<path d="M100,1272 L100,1352 L310,1352" class="arrow" fill="none"/>
+
+<!-- Center: straight down from (350,1272) to (350,1332) = END top (cy=1352,ry=20 => top=1332) -->
+<line x1="350" y1="1272" x2="350" y2="1332" class="arrow"/>
+
+<!-- Right: path from (600,1272) down to (600,1352) then left to (390,1352) = END right border (cx=350,rx=40 => right=390) -->
+<path d="M600,1272 L600,1352 L390,1352" class="arrow" fill="none"/>
+
+<!-- ============================================================ -->
+<!-- 11. END: cx=350, cy=1352, rx=40, ry=20. top=1332, bottom=1372 -->
+<!-- ============================================================ -->
+<g class="node" data-title="END" data-desc="End of REPORT request processing.&#10;The client has received either a 207 Multi-Status response with the requested data, or an error response (401, 403, or 400).">
+  <ellipse cx="350" cy="1352" rx="40" ry="20" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1352" dy="5" class="node-text">END</text>
+</g>
+
+<!-- Popup -->
+<foreignObject id="popup" class="popup-container" x="0" y="0" width="340" height="200">
+  <div xmlns="http://www.w3.org/1999/xhtml" style="font:12px/1.5 sans-serif;color:#333;
+       background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);
+       padding:12px 16px;position:relative;max-height:188px;overflow-y:auto;">
+    <div id="popup-close" style="position:absolute;top:6px;right:10px;cursor:pointer;
+         font:bold 16px sans-serif;color:#999;line-height:1;">X</div>
+    <div id="popup-title" style="font:bold 13px sans-serif;color:#222;margin-bottom:6px;
+         padding-right:20px;"></div>
+    <div id="popup-desc" style="font:12px/1.5 sans-serif;color:#555;white-space:pre-wrap;"></div>
+  </div>
+</foreignObject>
+
+<script><![CDATA[
+(function(){
+  var popup=document.getElementById('popup');
+  var pTitle=document.getElementById('popup-title');
+  var pDesc=document.getElementById('popup-desc');
+  var pClose=document.getElementById('popup-close');
+  var svg=popup.ownerSVGElement;
+  document.querySelectorAll('.node').forEach(function(n){
+    n.addEventListener('click',function(e){
+      e.stopPropagation();
+      pTitle.textContent=n.dataset.title;
+      pDesc.textContent=n.dataset.desc;
+      var b=n.getBBox();
+      var x=Math.min(Math.max(b.x+b.width/2-170,10),svg.viewBox.baseVal.width-350);
+      var y=b.y-210;
+      if(y<10) y=b.y+b.height+10;
+      popup.setAttribute('x',x);
+      popup.setAttribute('y',y);
+      popup.style.display='block';
+      popup.classList.add('visible');
+    });
+  });
+  function hidePopup(){popup.classList.remove('visible');popup.style.display='none';}
+  pClose.addEventListener('click',function(e){e.stopPropagation();hidePopup();});
+  svg.addEventListener('click',function(){hidePopup();});
+})();
+]]></script>
+
+<!-- LEGEND: LX=120, LY=1432. bottom=1642. canvas=1682 -->
+<rect x="120" y="1432" width="520" height="210" rx="8"
+      fill="#f8f9fa" stroke="#999" stroke-width="1.5"/>
+<text x="380" y="1454" class="label-text">Legend</text>
+
+<!-- Left column -->
+<ellipse cx="150" cy="1482" rx="14" ry="10" fill="url(#startGrad)"/>
+<text x="172" y="1486" class="legend-text">Start / End</text>
+
+<rect x="136" y="1504" width="28" height="16" rx="3" fill="url(#processGrad)"/>
+<text x="172" y="1516" class="legend-text">Process</text>
+
+<polygon points="150,1532 162,1542 150,1552 138,1542"
+         fill="url(#decisionGrad)"/>
+<text x="172" y="1546" class="legend-text">Decision</text>
+
+<ellipse cx="150" cy="1572" rx="14" ry="10" fill="url(#endGrad)"/>
+<text x="172" y="1576" class="legend-text">Success response</text>
+
+<ellipse cx="150" cy="1602" rx="14" ry="10" fill="url(#errorGrad)"/>
+<text x="172" y="1606" class="legend-text">Error response</text>
+
+<!-- Right column -->
+<line x1="410" y1="1482" x2="440" y2="1482" class="arrow-yes"/>
+<text x="450" y="1486" class="legend-text">Yes / true path</text>
+
+<line x1="410" y1="1512" x2="440" y2="1512" class="arrow-no"/>
+<text x="450" y="1516" class="legend-text">No / false path</text>
+
+<line x1="410" y1="1542" x2="440" y2="1542" class="arrow"/>
+<text x="450" y="1546" class="legend-text">Main flow / continue</text>
+
+</svg>

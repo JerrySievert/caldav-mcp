@@ -1,0 +1,406 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="2194" viewBox="0 0 760 2194">
+<defs>
+  <style>
+    .title        { font: bold 20px sans-serif; fill: #333; text-anchor: middle; }
+    .node-text    { font: bold 12px sans-serif; fill: #fff; text-anchor: middle; }
+    .node-sub     { font: 10px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+    .decision-text{ font: bold 11px sans-serif; fill: #fff; text-anchor: middle; }
+    .label-text   { font: bold 11px sans-serif; fill: #444; text-anchor: middle; }
+    .yes-label    { font: bold 11px sans-serif; fill: #2d6a4f; }
+    .no-label     { font: bold 11px sans-serif; fill: #c1292e; }
+    .arrow        { stroke: #444;    stroke-width: 1.8; fill: none; marker-end: url(#arr); }
+    .arrow-yes    { stroke: #2d6a4f; stroke-width: 1.8; fill: none; marker-end: url(#arr-yes); }
+    .arrow-no     { stroke: #c1292e; stroke-width: 1.8; fill: none; marker-end: url(#arr-no); }
+    .legend-text  { font: 11px sans-serif; fill: #333; }
+    .node { cursor: pointer; }
+    .popup-container { display: none; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+    .popup-container.visible { display: block; pointer-events: auto; opacity: 1; }
+  </style>
+  <marker id="arr"     markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#444"/>
+  </marker>
+  <marker id="arr-yes" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#2d6a4f"/>
+  </marker>
+  <marker id="arr-no"  markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#c1292e"/>
+  </marker>
+  <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+    <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.15"/>
+  </filter>
+  <linearGradient id="startGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#5a9fd4"/>
+    <stop offset="100%" stop-color="#4a90d9"/>
+  </linearGradient>
+  <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#6b9def"/>
+    <stop offset="100%" stop-color="#5b8def"/>
+  </linearGradient>
+  <linearGradient id="decisionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#f0a14a"/>
+    <stop offset="100%" stop-color="#e8913a"/>
+  </linearGradient>
+  <linearGradient id="endGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#2ebd6a"/>
+    <stop offset="100%" stop-color="#27ae60"/>
+  </linearGradient>
+  <linearGradient id="errorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#f05c4c"/>
+    <stop offset="100%" stop-color="#e74c3c"/>
+  </linearGradient>
+</defs>
+
+<!-- Background -->
+<rect width="760" height="2194" fill="#fafbfc" rx="8"/>
+
+<!-- Title -->
+<text x="380" y="35" class="title">PUT Event Flow</text>
+
+<!-- ============================================================ -->
+<!-- 1. START: cx=350, cy=84, rx=125, ry=32. top=52, bottom=116 -->
+<!-- ============================================================ -->
+<g class="node" data-title="PUT Request" data-desc="Client sends a PUT request to /{username}/{calendar_id}/{uid}.ics&#10;to create or update a calendar event.&#10;The request body contains iCalendar (VEVENT) data.&#10;Supports conditional updates via If-Match header with ETag.">
+  <ellipse cx="350" cy="84" rx="125" ry="32" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="350" y="78" dy="4" class="node-text">PUT Request</text>
+  <text x="350" y="96" dy="4" class="node-sub">/{username}/{calendar_id}/{uid}.ics</text>
+</g>
+
+<!-- Arrow: START bottom (350,116) to OPTIONS top (350,176). gap=60 -->
+<line x1="350" y1="116" x2="350" y2="176" class="arrow"/>
+
+<!-- ============================================================ -->
+<!-- 2. OPTIONS: cx=350, cy=216, dx=110, dy=40. top=176, bottom=256 -->
+<!-- ============================================================ -->
+<g class="node" data-title="Is method OPTIONS?" data-desc="Check the HTTP method of the incoming request.&#10;OPTIONS requests return DAV compliance headers immediately&#10;without authentication. All other methods continue to the&#10;authentication step.">
+  <polygon points="350,176 460,216 350,256 240,216"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="212" dy="4" class="decision-text">Is method</text>
+  <text x="350" y="226" dy="4" class="decision-text">OPTIONS?</text>
+</g>
+
+<!-- OPTIONS Yes: left from (240,216) to ellipse cx=100, rx=80, right border=180. gap=60 -->
+<line x1="240" y1="216" x2="180" y2="216" class="arrow-yes"/>
+<text x="228" y="210" class="yes-label">Yes</text>
+
+<!-- OPTIONS 200 OK: cx=100, cy=216, rx=80, ry=24 -->
+<g class="node" data-title="Return 200 OK" data-desc="Responds with DAV compliance and allowed method headers&#10;so the client knows this is a CalDAV-capable server.&#10;No authentication is required for OPTIONS requests.">
+  <ellipse cx="100" cy="216" rx="80" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="100" y="210" dy="4" class="node-text">Return 200 OK</text>
+  <text x="100" y="226" dy="4" class="node-sub">DAV headers</text>
+</g>
+
+<!-- OPTIONS No: down from (350,256) to auth rect top y=316. gap=60 -->
+<line x1="350" y1="256" x2="350" y2="316" class="arrow-no"/>
+<text x="360" y="290" class="no-label">No</text>
+
+<!-- ============================================================ -->
+<!-- 3. auth_or_path_user: x=223, y=316, w=254, h=56. cx=350, bottom=372 -->
+<!-- ============================================================ -->
+<g class="node" data-title="Call auth_or_path_user" data-desc="Authenticates the request using HTTP Basic Auth if credentials&#10;are provided, verifying the password with Argon2id.&#10;Falls back to resolving the user from the {username} URL path&#10;segment if no credentials are sent. The path fallback exists&#10;because Apple Calendar does not send credentials to&#10;/caldav/users/* URLs.">
+  <rect x="223" y="316" width="254" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="316" dy="22" class="node-text">Call auth_or_path_user</text>
+  <text x="350" y="316" dy="38" class="node-sub">HTTP Basic Auth / {username} fallback</text>
+</g>
+
+<!-- Arrow: auth bottom (350,372) to User diamond top (350,432). gap=60 -->
+<line x1="350" y1="372" x2="350" y2="432" class="arrow"/>
+
+<!-- ============================================================ -->
+<!-- 4. User resolved?: cx=350, cy=472, dx=110, dy=40. top=432, bottom=512 -->
+<!-- ============================================================ -->
+<g class="node" data-title="User resolved?" data-desc="Checks whether a valid user was identified through credentials&#10;or the URL path. If yes, the authenticated user is available&#10;for subsequent authorization checks. If no, the request is&#10;rejected as unauthorized.">
+  <polygon points="350,432 460,472 350,512 240,472"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="472" dy="4" class="decision-text">User resolved?</text>
+</g>
+
+<!-- User No: right from (460,472) to 401 ellipse cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="472" x2="540" y2="472" class="arrow-no"/>
+<text x="466" y="466" class="no-label">No</text>
+
+<!-- 401 Unauthorized: cx=620, cy=472, rx=80, ry=24 -->
+<g class="node" data-title="Return 401 Unauthorized" data-desc="No valid user could be identified from the request.&#10;The response prompts the client to provide Basic Auth&#10;credentials. The same error is returned for invalid credentials&#10;and unknown usernames to prevent enumeration.">
+  <ellipse cx="620" cy="472" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="466" dy="4" class="node-text">Return 401</text>
+  <text x="620" y="482" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- User Yes: down from (350,512) to Calendar diamond top (350,572). gap=60 -->
+<line x1="350" y1="512" x2="350" y2="572" class="arrow-yes"/>
+<text x="360" y="546" class="yes-label">Yes</text>
+
+<!-- ============================================================ -->
+<!-- 5. Calendar access?: cx=350, cy=612, dx=110, dy=40. top=572, bottom=652 -->
+<!-- ============================================================ -->
+<g class="node" data-title="Calendar access?" data-desc="Looks up the calendar by its ID from the URL path and verifies&#10;that the authenticated user is either the owner or has been&#10;granted shared read-write access. If the calendar does not exist&#10;or the user lacks access, the request is denied with 403.">
+  <polygon points="350,572 460,612 350,652 240,612"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="608" dy="4" class="decision-text">Calendar</text>
+  <text x="350" y="622" dy="4" class="decision-text">access?</text>
+</g>
+
+<!-- Calendar No: right from (460,612) to 403 ellipse cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="612" x2="540" y2="612" class="arrow-no"/>
+<text x="466" y="606" class="no-label">No</text>
+
+<!-- 403 Forbidden: cx=620, cy=612, rx=80, ry=24 -->
+<g class="node" data-title="Return 403 Forbidden" data-desc="The calendar does not exist or does not belong to the&#10;authenticated user. Uses 403 (not 404) to prevent calendar ID&#10;enumeration. Shared calendars require read-write permission&#10;for PUT operations.">
+  <ellipse cx="620" cy="612" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="606" dy="4" class="node-text">Return 403</text>
+  <text x="620" y="622" dy="4" class="node-sub">Forbidden</text>
+</g>
+
+<!-- Calendar Yes: down from (350,652) to Read body rect top (350,712). gap=60 -->
+<line x1="350" y1="652" x2="350" y2="712" class="arrow-yes"/>
+<text x="360" y="686" class="yes-label">Yes</text>
+
+<!-- ============================================================ -->
+<!-- 6. Read and validate body: x=230, y=712, w=240, h=56. cx=350, bottom=768 -->
+<!-- ============================================================ -->
+<g class="node" data-title="Read and validate body" data-desc="Reads the PUT request body and extracts the UID from the URL&#10;path by stripping the .ics extension from the filename.&#10;Validates that the body is not empty and contains valid data&#10;before attempting to parse it as iCalendar content.">
+  <rect x="230" y="712" width="240" height="56" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="712" dy="22" class="node-text">Read and validate body</text>
+  <text x="350" y="712" dy="38" class="node-sub">Extract UID from path, read request body</text>
+</g>
+
+<!-- Arrow: Read body bottom (350,768) to Body valid? top (350,828). gap=60 -->
+<line x1="350" y1="768" x2="350" y2="828" class="arrow"/>
+
+<!-- ============================================================ -->
+<!-- 7. Body valid?: cx=350, cy=868, dx=110, dy=40. top=828, bottom=908 -->
+<!-- ============================================================ -->
+<g class="node" data-title="Body valid?" data-desc="Checks whether the request body is non-empty and contains&#10;parseable content. An empty body or unparseable content results&#10;in a 400 Bad Request response. Valid bodies proceed to&#10;iCalendar field extraction.">
+  <polygon points="350,828 460,868 350,908 240,868"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="868" dy="4" class="decision-text">Body valid?</text>
+</g>
+
+<!-- Body No: right from (460,868) to 400 ellipse cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="868" x2="540" y2="868" class="arrow-no"/>
+<text x="466" y="862" class="no-label">No</text>
+
+<!-- 400 Bad Request: cx=620, cy=868, rx=80, ry=24 -->
+<g class="node" data-title="Return 400 Bad Request" data-desc="The request body is empty or contains invalid content that&#10;cannot be parsed as iCalendar data. The client must provide&#10;a valid VCALENDAR/VEVENT body.">
+  <ellipse cx="620" cy="868" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="862" dy="4" class="node-text">Return 400</text>
+  <text x="620" y="878" dy="4" class="node-sub">Bad Request</text>
+</g>
+
+<!-- Body Yes: down from (350,908) to Parse rect top (350,968). gap=60 -->
+<line x1="350" y1="908" x2="350" y2="968" class="arrow-yes"/>
+<text x="360" y="942" class="yes-label">Yes</text>
+
+<!-- ============================================================ -->
+<!-- 8. Parse iCalendar fields: x=245, y=968, w=210, h=44. cx=350, bottom=1012 -->
+<!-- ============================================================ -->
+<g class="node" data-title="Parse iCalendar fields" data-desc="Parses the iCalendar body to extract structured fields:&#10;DTSTART, DTEND, SUMMARY, DESCRIPTION, and LOCATION.&#10;Line unfolding is applied per RFC 5545 to handle continuation&#10;lines. These extracted fields are stored in indexed database&#10;columns for efficient time-range queries.">
+  <rect x="245" y="968" width="210" height="44" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="968" dy="27" class="node-text">Parse iCalendar fields</text>
+</g>
+
+<!-- Arrow: Parse bottom (350,1012) to If-Match top (350,1072). gap=60 -->
+<line x1="350" y1="1012" x2="350" y2="1072" class="arrow"/>
+
+<!-- ============================================================ -->
+<!-- 9. If-Match present?: cx=350, cy=1112, dx=110, dy=40. top=1072, bottom=1152 -->
+<!-- ============================================================ -->
+<g class="node" data-title="If-Match header present?" data-desc="Checks whether the client included an If-Match header.&#10;If present and not *, the server must verify that the existing&#10;object's ETag matches before allowing the update (conditional&#10;update per RFC 4918). If absent or *, the update proceeds&#10;unconditionally as an upsert.">
+  <polygon points="350,1072 460,1112 350,1152 240,1112"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1108" dy="4" class="decision-text">If-Match</text>
+  <text x="350" y="1122" dy="4" class="decision-text">present?</text>
+</g>
+
+<!-- If-Match No: right from (460,1112), bypass to Upsert rect via path -->
+<!-- Path: (460,1112) -> (560,1112) -> (560,1374) -> (460,1374) -->
+<path d="M460,1112 L560,1112 L560,1374 L460,1374" class="arrow-no" fill="none"/>
+<text x="466" y="1106" class="no-label">No</text>
+
+<!-- If-Match Yes: down from (350,1152) to ETag top (350,1212). gap=60 -->
+<line x1="350" y1="1152" x2="350" y2="1212" class="arrow-yes"/>
+<text x="360" y="1186" class="yes-label">Yes</text>
+
+<!-- ============================================================ -->
+<!-- 10. ETag matches?: cx=350, cy=1252, dx=110, dy=40. top=1212, bottom=1292 -->
+<!-- ============================================================ -->
+<g class="node" data-title="ETag matches?" data-desc="If the If-Match value is *, the update proceeds unconditionally.&#10;Otherwise, the server looks up the existing calendar object and&#10;compares its ETag (SHA-256 hash) against the If-Match value.&#10;If the object does not exist or the ETag differs, a 412&#10;Precondition Failed response is returned to prevent conflicts.">
+  <polygon points="350,1212 460,1252 350,1292 240,1252"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1248" dy="4" class="decision-text">ETag</text>
+  <text x="350" y="1262" dy="4" class="decision-text">matches?</text>
+</g>
+
+<!-- ETag No: right from (460,1252) to 412 ellipse cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="1252" x2="540" y2="1252" class="arrow-no"/>
+<text x="466" y="1246" class="no-label">No</text>
+
+<!-- 412 Precondition Failed: cx=620, cy=1252, rx=80, ry=24 -->
+<g class="node" data-title="Return 412 Precondition Failed" data-desc="The If-Match ETag does not match the current object's ETag,&#10;or the object does not exist when a specific ETag was provided.&#10;This prevents lost-update conflicts when multiple clients edit&#10;the same event concurrently. The client should re-fetch the&#10;event and retry with the updated ETag.">
+  <ellipse cx="620" cy="1252" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="1246" dy="4" class="node-text">Return 412</text>
+  <text x="620" y="1262" dy="4" class="node-sub">Precondition Failed</text>
+</g>
+
+<!-- ETag Yes: down from (350,1292) to Upsert rect top (350,1352). gap=60 -->
+<line x1="350" y1="1292" x2="350" y2="1352" class="arrow-yes"/>
+<text x="360" y="1326" class="yes-label">Yes</text>
+
+<!-- ============================================================ -->
+<!-- 11. Upsert object: x=240, y=1352, w=220, h=44. cx=350, bottom=1396 -->
+<!-- ============================================================ -->
+<g class="node" data-title="Upsert calendar object" data-desc="Inserts a new calendar object or updates an existing one in the&#10;database. Stores the raw iCalendar data along with extracted&#10;fields (DTSTART, DTEND, SUMMARY). Computes a new ETag as a&#10;SHA-256 hash of the data. Also bumps the calendar's ctag and&#10;logs a sync_change entry for delta sync support.">
+  <rect x="240" y="1352" width="220" height="44" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1352" dy="27" class="node-text">Upsert calendar object</text>
+</g>
+
+<!-- Arrow: Upsert bottom (350,1396) to Upsert succeeds? top (350,1456). gap=60 -->
+<line x1="350" y1="1396" x2="350" y2="1456" class="arrow"/>
+
+<!-- ============================================================ -->
+<!-- 12. Upsert succeeds?: cx=350, cy=1496, dx=110, dy=40. top=1456, bottom=1536 -->
+<!-- ============================================================ -->
+<g class="node" data-title="Upsert succeeds?" data-desc="Checks whether the database upsert operation completed&#10;successfully. A failure here indicates an internal database&#10;error such as a constraint violation or connection issue.">
+  <polygon points="350,1456 460,1496 350,1536 240,1496"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1492" dy="4" class="decision-text">Upsert</text>
+  <text x="350" y="1506" dy="4" class="decision-text">succeeds?</text>
+</g>
+
+<!-- Upsert No: right from (460,1496) to 500 ellipse cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="1496" x2="540" y2="1496" class="arrow-no"/>
+<text x="466" y="1490" class="no-label">No</text>
+
+<!-- 500 Internal Server Error: cx=620, cy=1496, rx=80, ry=24 -->
+<g class="node" data-title="Return 500 Internal Server Error" data-desc="The database upsert operation failed due to an internal error.&#10;This typically indicates a database connectivity issue or an&#10;unexpected constraint violation. The client should retry later.">
+  <ellipse cx="620" cy="1496" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="1490" dy="4" class="node-text">Return 500</text>
+  <text x="620" y="1506" dy="4" class="node-sub">Internal Server Error</text>
+</g>
+
+<!-- Upsert Yes: down from (350,1536) to Is new? top (350,1596). gap=60 -->
+<line x1="350" y1="1536" x2="350" y2="1596" class="arrow-yes"/>
+<text x="360" y="1570" class="yes-label">Yes</text>
+
+<!-- ============================================================ -->
+<!-- 13. Is new?: cx=350, cy=1636, dx=110, dy=40. top=1596, bottom=1676 -->
+<!-- ============================================================ -->
+<g class="node" data-title="Is new object?" data-desc="Determines whether the upsert created a new calendar object&#10;or updated an existing one. This is checked by comparing the&#10;database result (insert vs update). New objects return 201&#10;Created; updates return 204 No Content. Both include the new&#10;ETag header for subsequent conditional requests.">
+  <polygon points="350,1596 460,1636 350,1676 240,1636"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1632" dy="4" class="decision-text">Is new</text>
+  <text x="350" y="1646" dy="4" class="decision-text">object?</text>
+</g>
+
+<!-- Is new Yes: right from (460,1636) to 201 ellipse cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="1636" x2="540" y2="1636" class="arrow-yes"/>
+<text x="466" y="1630" class="yes-label">Yes</text>
+
+<!-- 201 Created: cx=620, cy=1636, rx=80, ry=24 -->
+<g class="node" data-title="Return 201 Created" data-desc="A new calendar object was created successfully.&#10;The response includes an ETag header with the SHA-256 hash&#10;of the stored iCalendar data, enabling the client to perform&#10;conditional updates on subsequent PUT requests.">
+  <ellipse cx="620" cy="1636" rx="80" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="620" y="1630" dy="4" class="node-text">Return 201</text>
+  <text x="620" y="1646" dy="4" class="node-sub">Created + ETag</text>
+</g>
+
+<!-- Is new No: down from (350,1676) to 204 ellipse top (350,1736). gap=60 -->
+<line x1="350" y1="1676" x2="350" y2="1736" class="arrow-no"/>
+<text x="360" y="1710" class="no-label">No</text>
+
+<!-- ============================================================ -->
+<!-- 14. 204 No Content: cx=350, cy=1760, rx=80, ry=24. top=1736, bottom=1784 -->
+<!-- ============================================================ -->
+<g class="node" data-title="Return 204 No Content" data-desc="An existing calendar object was updated successfully.&#10;The response includes an updated ETag header reflecting the&#10;new SHA-256 hash of the modified iCalendar data. No response&#10;body is returned for updates.">
+  <ellipse cx="350" cy="1760" rx="80" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1754" dy="4" class="node-text">Return 204</text>
+  <text x="350" y="1770" dy="4" class="node-sub">No Content + ETag</text>
+</g>
+
+<!-- Arrow: 204 bottom (350,1784) to END top (350,1844). gap=60 -->
+<line x1="350" y1="1784" x2="350" y2="1844" class="arrow"/>
+
+<!-- ============================================================ -->
+<!-- 15. END: cx=350, cy=1864, rx=40, ry=20. top=1844, bottom=1884 -->
+<!-- ============================================================ -->
+<g class="node" data-title="END" data-desc="End of PUT request processing.">
+  <ellipse cx="350" cy="1864" rx="40" ry="20" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1864" dy="5" class="node-text">END</text>
+</g>
+
+<!-- ============================================================ -->
+<!-- Popup -->
+<!-- ============================================================ -->
+<foreignObject id="popup" class="popup-container" x="0" y="0" width="340" height="200">
+  <div xmlns="http://www.w3.org/1999/xhtml" style="font:12px/1.5 sans-serif;color:#333;
+       background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);
+       padding:12px 16px;position:relative;max-height:188px;overflow-y:auto;">
+    <div id="popup-close" style="position:absolute;top:6px;right:10px;cursor:pointer;
+         font:bold 16px sans-serif;color:#999;line-height:1;">X</div>
+    <div id="popup-title" style="font:bold 13px sans-serif;color:#222;margin-bottom:6px;
+         padding-right:20px;"></div>
+    <div id="popup-desc" style="font:12px/1.5 sans-serif;color:#555;white-space:pre-wrap;"></div>
+  </div>
+</foreignObject>
+
+<script><![CDATA[
+(function(){
+  var popup=document.getElementById('popup');
+  var pTitle=document.getElementById('popup-title');
+  var pDesc=document.getElementById('popup-desc');
+  var pClose=document.getElementById('popup-close');
+  var svg=popup.ownerSVGElement;
+  document.querySelectorAll('.node').forEach(function(n){
+    n.addEventListener('click',function(e){
+      e.stopPropagation();
+      pTitle.textContent=n.dataset.title;
+      pDesc.textContent=n.dataset.desc;
+      var b=n.getBBox();
+      var x=Math.min(Math.max(b.x+b.width/2-170,10),svg.viewBox.baseVal.width-350);
+      var y=b.y-210;
+      if(y<10) y=b.y+b.height+10;
+      popup.setAttribute('x',x);
+      popup.setAttribute('y',y);
+      popup.style.display='block';
+      popup.classList.add('visible');
+    });
+  });
+  function hidePopup(){popup.classList.remove('visible');popup.style.display='none';}
+  pClose.addEventListener('click',function(e){e.stopPropagation();hidePopup();});
+  svg.addEventListener('click',function(){hidePopup();});
+})();
+]]></script>
+
+<!-- ============================================================ -->
+<!-- LEGEND: LX=120, LY=1944. bottom=2154. canvas=2194 -->
+<!-- ============================================================ -->
+<rect x="120" y="1944" width="520" height="210" rx="8"
+      fill="#f8f9fa" stroke="#999" stroke-width="1.5"/>
+<text x="380" y="1966" class="label-text">Legend</text>
+
+<!-- Left column -->
+<ellipse cx="150" cy="1994" rx="14" ry="10" fill="url(#startGrad)"/>
+<text x="172" y="1998" class="legend-text">Start / End</text>
+
+<rect x="136" y="2016" width="28" height="16" rx="3" fill="url(#processGrad)"/>
+<text x="172" y="2028" class="legend-text">Process</text>
+
+<polygon points="150,2044 162,2054 150,2064 138,2054"
+         fill="url(#decisionGrad)"/>
+<text x="172" y="2058" class="legend-text">Decision</text>
+
+<ellipse cx="150" cy="2084" rx="14" ry="10" fill="url(#endGrad)"/>
+<text x="172" y="2088" class="legend-text">Success response</text>
+
+<ellipse cx="150" cy="2114" rx="14" ry="10" fill="url(#errorGrad)"/>
+<text x="172" y="2118" class="legend-text">Error response</text>
+
+<!-- Right column -->
+<line x1="410" y1="1994" x2="440" y2="1994" class="arrow-yes"/>
+<text x="450" y="1998" class="legend-text">Yes / true path</text>
+
+<line x1="410" y1="2024" x2="440" y2="2024" class="arrow-no"/>
+<text x="450" y="2028" class="legend-text">No / false path</text>
+
+<line x1="410" y1="2054" x2="440" y2="2054" class="arrow"/>
+<text x="450" y="2058" class="legend-text">Main flow / continue</text>
+
+</svg>

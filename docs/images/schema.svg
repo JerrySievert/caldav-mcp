@@ -1,0 +1,334 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 820" width="1080" height="820">
+  <defs>
+    <style>
+      .title { font: bold 20px sans-serif; fill: #333; }
+      .table-header { font: bold 13px sans-serif; fill: #fff; text-anchor: middle; }
+      .column-name { font: 12px monospace; fill: #333; }
+      .column-type { font: 12px monospace; fill: #777; text-anchor: end; }
+      .pk-icon { font: bold 10px sans-serif; fill: #e8913a; }
+      .fk-icon { font: bold 10px sans-serif; fill: #5b8def; }
+      .nullable { font: 10px sans-serif; fill: #999; }
+      .relation-label { font: 11px sans-serif; fill: #555; }
+      .group-label { font: bold 14px sans-serif; fill: #444; }
+      .label-text { font: bold 11px sans-serif; fill: #444; text-anchor: middle; }
+      .legend-text { font: 11px sans-serif; fill: #333; }
+      .arrow { stroke: #555; stroke-width: 1.5; fill: none; }
+    </style>
+
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.12"/>
+    </filter>
+
+    <linearGradient id="tableGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6b9def"/>
+      <stop offset="100%" stop-color="#5b8def"/>
+    </linearGradient>
+    <linearGradient id="tableGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6bc785"/>
+      <stop offset="100%" stop-color="#5ab870"/>
+    </linearGradient>
+    <linearGradient id="tableGrad3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#b07de8"/>
+      <stop offset="100%" stop-color="#9b6dd0"/>
+    </linearGradient>
+
+    <marker id="one" markerWidth="12" markerHeight="12" refX="12" refY="6" orient="auto">
+      <line x1="10" y1="2" x2="10" y2="10" stroke="#555" stroke-width="1.5"/>
+    </marker>
+    <marker id="many" markerWidth="16" markerHeight="12" refX="14" refY="6" orient="auto">
+      <path d="M2,6 L14,2 M2,6 L14,10 M14,2 L14,10" stroke="#555" stroke-width="1.2" fill="none"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1080" height="820" fill="#fafbfc" rx="8"/>
+
+  <!-- Title -->
+  <text x="540" y="35" class="title" text-anchor="middle">CalDAV Server Database Schema</text>
+
+  <!-- ================================================================ -->
+  <!-- TABLE: users (x=40, y=70, w=240, h=160) Blue                    -->
+  <!-- Rows: id, username, email, password_hash, created_at             -->
+  <!-- Row y = 70 + 32 + (row * 24) + 12                               -->
+  <!-- Row 0: y=114, Row 1: y=138, Row 2: y=162, Row 3: y=186, Row 4: y=210 -->
+  <!-- ================================================================ -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="70" width="240" height="160" rx="6" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    <rect x="40" y="70" width="240" height="32" rx="6" fill="url(#tableGrad)"/>
+    <rect x="40" y="90" width="240" height="12" fill="url(#tableGrad)"/>
+    <text x="160" y="92" class="table-header">users</text>
+    <line x1="40" y1="102" x2="280" y2="102" stroke="#ddd" stroke-width="1"/>
+
+    <text x="50" y="122" class="pk-icon">PK</text>
+    <text x="72" y="122" class="column-name">id</text>
+    <text x="270" y="122" class="column-type">TEXT</text>
+
+    <text x="72" y="146" class="column-name">username</text>
+    <text x="270" y="146" class="column-type">TEXT</text>
+    <text x="195" y="146" class="nullable">UNIQUE</text>
+
+    <text x="72" y="170" class="column-name">email</text>
+    <text x="270" y="170" class="column-type">TEXT</text>
+
+    <text x="72" y="194" class="column-name">password_hash</text>
+    <text x="270" y="194" class="column-type">TEXT</text>
+
+    <text x="72" y="218" class="column-name">created_at</text>
+    <text x="270" y="218" class="column-type">TEXT</text>
+  </g>
+
+  <!-- ================================================================ -->
+  <!-- TABLE: mcp_tokens (x=40, y=310, w=240, h=184) Green             -->
+  <!-- Rows: id, user_id, token_hash, name, created_at, expires_at     -->
+  <!-- ================================================================ -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="310" width="240" height="184" rx="6" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    <rect x="40" y="310" width="240" height="32" rx="6" fill="url(#tableGrad2)"/>
+    <rect x="40" y="330" width="240" height="12" fill="url(#tableGrad2)"/>
+    <text x="160" y="332" class="table-header">mcp_tokens</text>
+    <line x1="40" y1="342" x2="280" y2="342" stroke="#ddd" stroke-width="1"/>
+
+    <text x="50" y="362" class="pk-icon">PK</text>
+    <text x="72" y="362" class="column-name">id</text>
+    <text x="270" y="362" class="column-type">TEXT</text>
+
+    <text x="50" y="386" class="fk-icon">FK</text>
+    <text x="72" y="386" class="column-name">user_id</text>
+    <text x="270" y="386" class="column-type">TEXT</text>
+
+    <text x="72" y="410" class="column-name">token_hash</text>
+    <text x="270" y="410" class="column-type">TEXT</text>
+
+    <text x="72" y="434" class="column-name">name</text>
+    <text x="270" y="434" class="column-type">TEXT</text>
+
+    <text x="72" y="458" class="column-name">created_at</text>
+    <text x="270" y="458" class="column-type">TEXT</text>
+
+    <text x="72" y="482" class="column-name">expires_at</text>
+    <text x="270" y="482" class="column-type">TEXT</text>
+    <text x="195" y="482" class="nullable">NULL</text>
+  </g>
+
+  <!-- ================================================================ -->
+  <!-- TABLE: calendars (x=400, y=70, w=240, h=280) Blue               -->
+  <!-- ================================================================ -->
+  <g filter="url(#shadow)">
+    <rect x="400" y="70" width="240" height="280" rx="6" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    <rect x="400" y="70" width="240" height="32" rx="6" fill="url(#tableGrad)"/>
+    <rect x="400" y="90" width="240" height="12" fill="url(#tableGrad)"/>
+    <text x="520" y="92" class="table-header">calendars</text>
+    <line x1="400" y1="102" x2="640" y2="102" stroke="#ddd" stroke-width="1"/>
+
+    <text x="410" y="122" class="pk-icon">PK</text>
+    <text x="432" y="122" class="column-name">id</text>
+    <text x="630" y="122" class="column-type">TEXT</text>
+
+    <text x="410" y="146" class="fk-icon">FK</text>
+    <text x="432" y="146" class="column-name">owner_id</text>
+    <text x="630" y="146" class="column-type">TEXT</text>
+
+    <text x="432" y="170" class="column-name">name</text>
+    <text x="630" y="170" class="column-type">TEXT</text>
+
+    <text x="432" y="194" class="column-name">description</text>
+    <text x="630" y="194" class="column-type">TEXT</text>
+
+    <text x="432" y="218" class="column-name">color</text>
+    <text x="630" y="218" class="column-type">TEXT</text>
+
+    <text x="432" y="242" class="column-name">timezone</text>
+    <text x="630" y="242" class="column-type">TEXT</text>
+
+    <text x="432" y="266" class="column-name">ctag</text>
+    <text x="630" y="266" class="column-type">TEXT</text>
+
+    <text x="432" y="290" class="column-name">sync_token</text>
+    <text x="630" y="290" class="column-type">TEXT</text>
+
+    <text x="432" y="314" class="column-name">created_at</text>
+    <text x="630" y="314" class="column-type">TEXT</text>
+
+    <text x="432" y="338" class="column-name">updated_at</text>
+    <text x="630" y="338" class="column-type">TEXT</text>
+  </g>
+
+  <!-- ================================================================ -->
+  <!-- TABLE: calendar_objects (x=760, y=70, w=260, h=304) Blue        -->
+  <!-- ================================================================ -->
+  <g filter="url(#shadow)">
+    <rect x="760" y="70" width="260" height="304" rx="6" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    <rect x="760" y="70" width="260" height="32" rx="6" fill="url(#tableGrad)"/>
+    <rect x="760" y="90" width="260" height="12" fill="url(#tableGrad)"/>
+    <text x="890" y="92" class="table-header">calendar_objects</text>
+    <line x1="760" y1="102" x2="1020" y2="102" stroke="#ddd" stroke-width="1"/>
+
+    <text x="770" y="122" class="pk-icon">PK</text>
+    <text x="792" y="122" class="column-name">id</text>
+    <text x="1010" y="122" class="column-type">TEXT</text>
+
+    <text x="770" y="146" class="fk-icon">FK</text>
+    <text x="792" y="146" class="column-name">calendar_id</text>
+    <text x="1010" y="146" class="column-type">TEXT</text>
+
+    <text x="792" y="170" class="column-name">uid</text>
+    <text x="1010" y="170" class="column-type">TEXT</text>
+    <text x="955" y="170" class="nullable">UQ</text>
+
+    <text x="792" y="194" class="column-name">etag</text>
+    <text x="1010" y="194" class="column-type">TEXT</text>
+
+    <text x="792" y="218" class="column-name">ical_data</text>
+    <text x="1010" y="218" class="column-type">TEXT</text>
+
+    <text x="792" y="242" class="column-name">component_type</text>
+    <text x="1010" y="242" class="column-type">TEXT</text>
+
+    <text x="792" y="266" class="column-name">dtstart</text>
+    <text x="1010" y="266" class="column-type">TEXT</text>
+    <text x="955" y="266" class="nullable">NULL</text>
+
+    <text x="792" y="290" class="column-name">dtend</text>
+    <text x="1010" y="290" class="column-type">TEXT</text>
+    <text x="955" y="290" class="nullable">NULL</text>
+
+    <text x="792" y="314" class="column-name">summary</text>
+    <text x="1010" y="314" class="column-type">TEXT</text>
+    <text x="955" y="314" class="nullable">NULL</text>
+
+    <text x="792" y="338" class="column-name">created_at</text>
+    <text x="1010" y="338" class="column-type">TEXT</text>
+
+    <text x="792" y="362" class="column-name">updated_at</text>
+    <text x="1010" y="362" class="column-type">TEXT</text>
+  </g>
+
+  <!-- ================================================================ -->
+  <!-- TABLE: calendar_shares (x=400, y=430, w=240, h=160) Purple      -->
+  <!-- ================================================================ -->
+  <g filter="url(#shadow)">
+    <rect x="400" y="430" width="240" height="160" rx="6" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    <rect x="400" y="430" width="240" height="32" rx="6" fill="url(#tableGrad3)"/>
+    <rect x="400" y="450" width="240" height="12" fill="url(#tableGrad3)"/>
+    <text x="520" y="452" class="table-header">calendar_shares</text>
+    <line x1="400" y1="462" x2="640" y2="462" stroke="#ddd" stroke-width="1"/>
+
+    <text x="410" y="482" class="pk-icon">PK</text>
+    <text x="432" y="482" class="column-name">id</text>
+    <text x="630" y="482" class="column-type">TEXT</text>
+
+    <text x="410" y="506" class="fk-icon">FK</text>
+    <text x="432" y="506" class="column-name">calendar_id</text>
+    <text x="630" y="506" class="column-type">TEXT</text>
+
+    <text x="410" y="530" class="fk-icon">FK</text>
+    <text x="432" y="530" class="column-name">user_id</text>
+    <text x="630" y="530" class="column-type">TEXT</text>
+
+    <text x="432" y="554" class="column-name">permission</text>
+    <text x="630" y="554" class="column-type">TEXT</text>
+    <text x="555" y="554" class="nullable">CHECK</text>
+
+    <text x="432" y="578" class="column-name">created_at</text>
+    <text x="630" y="578" class="column-type">TEXT</text>
+  </g>
+
+  <!-- ================================================================ -->
+  <!-- TABLE: sync_changes (x=760, y=430, w=260, h=184) Green          -->
+  <!-- ================================================================ -->
+  <g filter="url(#shadow)">
+    <rect x="760" y="430" width="260" height="184" rx="6" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    <rect x="760" y="430" width="260" height="32" rx="6" fill="url(#tableGrad2)"/>
+    <rect x="760" y="450" width="260" height="12" fill="url(#tableGrad2)"/>
+    <text x="890" y="452" class="table-header">sync_changes</text>
+    <line x1="760" y1="462" x2="1020" y2="462" stroke="#ddd" stroke-width="1"/>
+
+    <text x="770" y="482" class="pk-icon">PK</text>
+    <text x="792" y="482" class="column-name">id</text>
+    <text x="1010" y="482" class="column-type">INTEGER</text>
+    <text x="935" y="482" class="nullable">AUTO</text>
+
+    <text x="770" y="506" class="fk-icon">FK</text>
+    <text x="792" y="506" class="column-name">calendar_id</text>
+    <text x="1010" y="506" class="column-type">TEXT</text>
+
+    <text x="792" y="530" class="column-name">object_uid</text>
+    <text x="1010" y="530" class="column-type">TEXT</text>
+
+    <text x="792" y="554" class="column-name">change_type</text>
+    <text x="1010" y="554" class="column-type">TEXT</text>
+    <text x="935" y="554" class="nullable">CHECK</text>
+
+    <text x="792" y="578" class="column-name">sync_token</text>
+    <text x="1010" y="578" class="column-type">TEXT</text>
+
+    <text x="792" y="602" class="column-name">created_at</text>
+    <text x="1010" y="602" class="column-type">TEXT</text>
+  </g>
+
+  <!-- ================================================================ -->
+  <!-- RELATIONSHIPS (no floating labels, FK names are self-documenting)-->
+  <!-- ================================================================ -->
+
+  <!-- users.id 1..* calendars.owner_id -->
+  <!-- users right (280) at id row y=122, calendars left (400) at owner_id row y=146 -->
+  <path d="M280,122 L340,122 L340,146 L400,146" class="arrow" fill="none"
+        marker-start="url(#one)" marker-end="url(#many)"/>
+
+  <!-- users.id 1..* mcp_tokens.user_id -->
+  <!-- users left (40) at id row y=122, route left to x=25, down to mcp_tokens user_id row y=386, right to mcp_tokens left (40) -->
+  <path d="M40,122 L25,122 L25,386 L40,386" class="arrow" fill="none"
+        marker-start="url(#one)" marker-end="url(#many)"/>
+
+  <!-- users.id 1..* calendar_shares.user_id -->
+  <!-- Route: users left (40) at id row y=122, left to x=20, down to shares user_id row y=530, right to shares left (400) -->
+  <path d="M40,122 L20,122 L20,530 L400,530" class="arrow" fill="none"
+        marker-start="url(#one)" marker-end="url(#many)"/>
+
+  <!-- calendars.id 1..* calendar_objects.calendar_id -->
+  <!-- calendars right (640) at id row y=122, calendar_objects left (760) at calendar_id row y=146 -->
+  <path d="M640,122 L700,122 L700,146 L760,146" class="arrow" fill="none"
+        marker-start="url(#one)" marker-end="url(#many)"/>
+
+  <!-- calendars.id 1..* calendar_shares.calendar_id -->
+  <!-- calendars left (400) at id row y=122, route left to x=380, down to shares calendar_id row y=506, right to shares left (400) -->
+  <path d="M400,122 L380,122 L380,506 L400,506" class="arrow" fill="none"
+        marker-start="url(#one)" marker-end="url(#many)"/>
+
+  <!-- calendars.id 1..* sync_changes.calendar_id -->
+  <!-- calendars right (640) at sync_token row y=290, route right and down to sync_changes left (760) at calendar_id row y=506 -->
+  <path d="M640,290 L690,290 L690,506 L760,506" class="arrow" fill="none"
+        marker-start="url(#one)" marker-end="url(#many)"/>
+
+  <!-- ================================================================ -->
+  <!-- LEGEND: LX=280, LY=660. Canvas=820.                             -->
+  <!-- LX = (1080 - 520) / 2 = 280                                     -->
+  <!-- LY = 614 (lowest table bottom) + 46 = 660                       -->
+  <!-- Legend bottom = 660 + 130 = 790. Canvas = 790 + 30 = 820.       -->
+  <!-- ================================================================ -->
+  <rect x="280" y="660" width="520" height="130" rx="8"
+        fill="#f8f9fa" stroke="#999" stroke-width="1.5"/>
+  <text x="540" y="682" class="label-text">Legend</text>
+
+  <!-- Left column: table categories -->
+  <rect x="296" y="698" width="20" height="14" rx="3" fill="url(#tableGrad)"/>
+  <text x="324" y="710" class="legend-text">Core entity</text>
+
+  <rect x="296" y="720" width="20" height="14" rx="3" fill="url(#tableGrad2)"/>
+  <text x="324" y="732" class="legend-text">Reference / tracking</text>
+
+  <rect x="296" y="742" width="20" height="14" rx="3" fill="url(#tableGrad3)"/>
+  <text x="324" y="754" class="legend-text">Join / association</text>
+
+  <!-- Right column: annotations and markers -->
+  <text x="560" y="710" class="pk-icon">PK</text>
+  <text x="580" y="710" class="legend-text">Primary key</text>
+
+  <text x="560" y="732" class="fk-icon">FK</text>
+  <text x="580" y="732" class="legend-text">Foreign key</text>
+
+  <path d="M560,748 L600,748" class="arrow" fill="none"
+        marker-start="url(#one)" marker-end="url(#many)"/>
+  <text x="608" y="752" class="legend-text">One-to-many</text>
+
+</svg>

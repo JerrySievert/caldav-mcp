@@ -1,0 +1,475 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="2830" viewBox="0 0 1000 2830">
+<defs>
+  <style>
+    .title        { font: bold 20px sans-serif; fill: #333; text-anchor: middle; }
+    .node-text    { font: bold 12px sans-serif; fill: #fff; text-anchor: middle; }
+    .node-sub     { font: 10px sans-serif; fill: rgba(255,255,255,0.85); text-anchor: middle; }
+    .decision-text{ font: bold 11px sans-serif; fill: #fff; text-anchor: middle; }
+    .label-text   { font: bold 11px sans-serif; fill: #444; text-anchor: middle; }
+    .yes-label    { font: bold 11px sans-serif; fill: #2d6a4f; }
+    .no-label     { font: bold 11px sans-serif; fill: #c1292e; }
+    .arrow        { stroke: #444;    stroke-width: 1.8; fill: none; marker-end: url(#arr); }
+    .arrow-yes    { stroke: #2d6a4f; stroke-width: 1.8; fill: none; marker-end: url(#arr-yes); }
+    .arrow-no     { stroke: #c1292e; stroke-width: 1.8; fill: none; marker-end: url(#arr-no); }
+    .legend-text  { font: 11px sans-serif; fill: #333; }
+    .section-title{ font: bold 15px sans-serif; fill: #333; text-anchor: middle; }
+    .node { cursor: pointer; }
+    .popup-container { display: none; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+    .popup-container.visible { display: block; pointer-events: auto; opacity: 1; }
+  </style>
+  <marker id="arr"     markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#444"/>
+  </marker>
+  <marker id="arr-yes" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#2d6a4f"/>
+  </marker>
+  <marker id="arr-no"  markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#c1292e"/>
+  </marker>
+  <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+    <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.15"/>
+  </filter>
+  <linearGradient id="startGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#5a9fd4"/>
+    <stop offset="100%" stop-color="#4a90d9"/>
+  </linearGradient>
+  <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#6b9def"/>
+    <stop offset="100%" stop-color="#5b8def"/>
+  </linearGradient>
+  <linearGradient id="decisionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#f0a14a"/>
+    <stop offset="100%" stop-color="#e8913a"/>
+  </linearGradient>
+  <linearGradient id="endGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#2ebd6a"/>
+    <stop offset="100%" stop-color="#27ae60"/>
+  </linearGradient>
+  <linearGradient id="errorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#f05c4c"/>
+    <stop offset="100%" stop-color="#e74c3c"/>
+  </linearGradient>
+</defs>
+
+<!-- Background -->
+<rect width="1000" height="2830" fill="#fafbfc" rx="8"/>
+
+<!-- Title -->
+<text x="500" y="35" class="title">Authentication Strategies Flow</text>
+
+<!-- ========================================================= -->
+<!-- SECTION 1: inline_auth (CalDAV strict)                    -->
+<!-- ========================================================= -->
+
+<!-- Section header -->
+<rect x="60" y="60" width="880" height="30" rx="4" fill="#e8e8e8"/>
+<text x="500" y="81" class="section-title">inline_auth (CalDAV strict)</text>
+
+<!-- START: cx=350, cy=130, rx=100, ry=24. top=106, bottom=154 -->
+<g class="node" data-title="inline_auth called" data-desc="A handler calls inline_auth to verify the request has valid HTTP Basic Auth credentials.&#10;This is the strictest strategy: authentication always required, no fallback.&#10;Used by handlers that must confirm identity before proceeding.">
+  <ellipse cx="350" cy="130" rx="100" ry="24" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="350" y="124" dy="4" class="node-text">inline_auth</text>
+  <text x="350" y="140" dy="4" class="node-sub">Handler requires auth</text>
+</g>
+
+<!-- Arrow: START bottom (350,154) to Decision top (350,214). gap=60 -->
+<line x1="350" y1="154" x2="350" y2="214" class="arrow"/>
+
+<!-- Decision: Auth header present? cx=350, cy=254, top=214, bottom=294 -->
+<g class="node" data-title="Authorization header present?" data-desc="Checks whether the HTTP request includes an Authorization header.&#10;If absent, authentication fails immediately with a 401 response prompting the client to provide Basic Auth credentials.">
+  <polygon points="350,214 460,254 350,294 240,254"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="250" dy="4" class="decision-text">Auth header</text>
+  <text x="350" y="264" dy="4" class="decision-text">present?</text>
+</g>
+
+<!-- No: right from (460,254) to 401 error. cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="254" x2="540" y2="254" class="arrow-no"/>
+<text x="466" y="248" class="no-label">No</text>
+
+<g class="node" data-title="Return 401 Unauthorized" data-desc="No credentials were provided in the request.&#10;The response includes a WWW-Authenticate header prompting the client to send Basic Auth credentials.">
+  <ellipse cx="620" cy="254" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="248" dy="4" class="node-text">Return 401</text>
+  <text x="620" y="264" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- Yes: down from (350,294) to Process top (350,354). gap=60 -->
+<line x1="350" y1="294" x2="350" y2="354" class="arrow-yes"/>
+<text x="360" y="328" class="yes-label">Yes</text>
+
+<!-- Process: Decode Basic Auth. x=255, y=354, w=190, h=44. cx=350, bottom=398 -->
+<g class="node" data-title="Decode Basic Auth" data-desc="Extracts and decodes the base64-encoded username and password from the Authorization header.&#10;The header format is 'Basic base64(username:password)'.">
+  <rect x="255" y="354" width="190" height="44" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="354" dy="27" class="node-text">Decode Basic Auth</text>
+</g>
+
+<!-- Arrow: Process bottom (350,398) to Decision top (350,458). gap=60 -->
+<line x1="350" y1="398" x2="350" y2="458" class="arrow"/>
+
+<!-- Decision: User found? cx=350, cy=498, top=458, bottom=538 -->
+<g class="node" data-title="User found by username?" data-desc="Looks up the user in the database by the username extracted from the Basic Auth header.&#10;If no user exists with that username, authentication fails.">
+  <polygon points="350,458 460,498 350,538 240,498"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="494" dy="4" class="decision-text">User found?</text>
+</g>
+
+<!-- No: right from (460,498) to 401 error. cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="498" x2="540" y2="498" class="arrow-no"/>
+<text x="466" y="492" class="no-label">No</text>
+
+<g class="node" data-title="Return 401 Unauthorized" data-desc="No user exists with the provided username.&#10;The same 401 response is returned whether the username or password is wrong, to avoid leaking which usernames are valid.">
+  <ellipse cx="620" cy="498" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="492" dy="4" class="node-text">Return 401</text>
+  <text x="620" y="508" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- Yes: down from (350,538) to Decision top (350,598). gap=60 -->
+<line x1="350" y1="538" x2="350" y2="598" class="arrow-yes"/>
+<text x="360" y="572" class="yes-label">Yes</text>
+
+<!-- Decision: Password valid? cx=350, cy=638, top=598, bottom=678 -->
+<g class="node" data-title="Argon2id password valid?" data-desc="Verifies the provided password against the stored Argon2id hash.&#10;Argon2id is a memory-hard hashing algorithm that resists brute-force and side-channel attacks.&#10;If the password does not match, authentication fails.">
+  <polygon points="350,598 460,638 350,678 240,638"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="634" dy="4" class="decision-text">Password valid?</text>
+</g>
+
+<!-- No: right from (460,638) to 401 error. cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="638" x2="540" y2="638" class="arrow-no"/>
+<text x="466" y="632" class="no-label">No</text>
+
+<g class="node" data-title="Return 401 Unauthorized" data-desc="The password provided does not match the stored hash for this user.&#10;Authentication fails with the same generic 401 response to prevent password enumeration.">
+  <ellipse cx="620" cy="638" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="632" dy="4" class="node-text">Return 401</text>
+  <text x="620" y="648" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- Yes: down from (350,678) to Success top (350,738). gap=60 -->
+<line x1="350" y1="678" x2="350" y2="738" class="arrow-yes"/>
+<text x="360" y="712" class="yes-label">Yes</text>
+
+<!-- Success: Return User. cx=350, cy=762, rx=100, ry=24. top=738, bottom=786 -->
+<g class="node" data-title="Return User (authenticated)" data-desc="The user has been fully authenticated via HTTP Basic Auth.&#10;The User struct is returned to the calling handler, which can then proceed with the authorized operation.">
+  <ellipse cx="350" cy="762" rx="100" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="350" y="756" dy="4" class="node-text">Return User</text>
+  <text x="350" y="772" dy="4" class="node-sub">Authenticated</text>
+</g>
+
+<!-- ========================================================= -->
+<!-- SECTION 2: auth_or_path_user (CalDAV flexible)            -->
+<!-- Section 1 bottom = 786. Divider at 830. Header at 850.   -->
+<!-- ========================================================= -->
+
+<!-- Section divider -->
+<line x1="60" y1="830" x2="940" y2="830" stroke="#ccc" stroke-width="1" stroke-dasharray="8,4"/>
+
+<!-- Section header -->
+<rect x="60" y="850" width="880" height="30" rx="4" fill="#e8e8e8"/>
+<text x="500" y="871" class="section-title">auth_or_path_user (CalDAV flexible)</text>
+
+<!-- START: cx=350, cy=920, rx=120, ry=24. top=896, bottom=944 -->
+<g class="node" data-title="auth_or_path_user called" data-desc="A handler calls auth_or_path_user to authenticate the request.&#10;This strategy first tries HTTP Basic Auth if credentials are present. If no credentials are provided, it falls back to resolving the user from the URL path parameter.&#10;Used by /caldav/users/{username}/* handlers where Apple Calendar may not send credentials.">
+  <ellipse cx="350" cy="920" rx="120" ry="24" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="350" y="914" dy="4" class="node-text">auth_or_path_user</text>
+  <text x="350" y="930" dy="4" class="node-sub">Handler requires user identity</text>
+</g>
+
+<!-- Arrow: START bottom (350,944) to Decision top (350,1004). gap=60 -->
+<line x1="350" y1="944" x2="350" y2="1004" class="arrow"/>
+
+<!-- Decision: Auth header present? cx=350, cy=1044, top=1004, bottom=1084 -->
+<g class="node" data-title="Authorization header present?" data-desc="Checks whether the HTTP request includes an Authorization header.&#10;If credentials are present, the Basic Auth path is used for full verification.&#10;If absent, the path-based fallback resolves the user from the URL without password verification.">
+  <polygon points="350,1004 460,1044 350,1084 240,1044"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1040" dy="4" class="decision-text">Auth header</text>
+  <text x="350" y="1054" dy="4" class="decision-text">present?</text>
+</g>
+
+<!-- ===================== YES PATH (Basic Auth, cx=350) ===================== -->
+
+<!-- Yes: down from (350,1084) to Process top (350,1144). gap=60 -->
+<line x1="350" y1="1084" x2="350" y2="1144" class="arrow-yes"/>
+<text x="360" y="1118" class="yes-label">Yes</text>
+
+<!-- Process: Decode Basic Auth. x=255, y=1144, w=190, h=44. cx=350, bottom=1188 -->
+<g class="node" data-title="Decode Basic Auth" data-desc="Extracts and decodes the base64-encoded username and password from the Authorization header.&#10;The header format is 'Basic base64(username:password)'.">
+  <rect x="255" y="1144" width="190" height="44" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1144" dy="27" class="node-text">Decode Basic Auth</text>
+</g>
+
+<!-- Arrow: Process bottom (350,1188) to Decision top (350,1248). gap=60 -->
+<line x1="350" y1="1188" x2="350" y2="1248" class="arrow"/>
+
+<!-- Decision: Credentials valid? cx=350, cy=1288, top=1248, bottom=1328 -->
+<g class="node" data-title="User found and password valid?" data-desc="Looks up the user by username and verifies the password against the stored Argon2id hash.&#10;Both checks must pass for authentication to succeed on this path.">
+  <polygon points="350,1248 460,1288 350,1328 240,1288"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1284" dy="4" class="decision-text">Credentials</text>
+  <text x="350" y="1298" dy="4" class="decision-text">valid?</text>
+</g>
+
+<!-- No: left from (240,1288) to 401. cx=100, rx=80, right=180. gap=60 -->
+<line x1="240" y1="1288" x2="180" y2="1288" class="arrow-no"/>
+<text x="228" y="1282" class="no-label">No</text>
+
+<g class="node" data-title="Return 401 Unauthorized" data-desc="The provided username or password is invalid.&#10;When credentials are explicitly sent, there is no path-based fallback. The request is rejected.">
+  <ellipse cx="100" cy="1288" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="100" y="1282" dy="4" class="node-text">Return 401</text>
+  <text x="100" y="1298" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- Yes: down from (350,1328) to Success top (350,1388). gap=60 -->
+<line x1="350" y1="1328" x2="350" y2="1388" class="arrow-yes"/>
+<text x="360" y="1362" class="yes-label">Yes</text>
+
+<!-- Success: Return User. cx=350, cy=1412, rx=100, ry=24. top=1388, bottom=1436 -->
+<g class="node" data-title="Return User (authenticated)" data-desc="The user has been fully authenticated via HTTP Basic Auth.&#10;The User struct is returned to the calling handler for authorization checks.">
+  <ellipse cx="350" cy="1412" rx="100" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1406" dy="4" class="node-text">Return User</text>
+  <text x="350" y="1422" dy="4" class="node-sub">Authenticated</text>
+</g>
+
+<!-- ===================== NO PATH (Path fallback, cx=700) ===================== -->
+
+<!-- No: right from (460,1044) to Process. Arrow from right vertex to rect left border. -->
+<!-- Process rect: x=595, y=1022, w=210, h=44. cx=700. left=595. gap=460 to 595 = 135 -->
+<line x1="460" y1="1044" x2="595" y2="1044" class="arrow-no"/>
+<text x="466" y="1038" class="no-label">No</text>
+
+<!-- Process: Extract username from URL. x=595, y=1022, w=210, h=44. cx=700, bottom=1066 -->
+<g class="node" data-title="Extract {username} from URL" data-desc="No credentials were provided, so the user is resolved by extracting the {username} path parameter from the URL.&#10;This fallback exists because Apple Calendar's dataaccessd daemon does not always send credentials to /caldav/users/* paths.">
+  <rect x="595" y="1022" width="210" height="44" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="700" y="1022" dy="22" class="node-text">Extract {username}</text>
+  <text x="700" y="1022" dy="38" class="node-sub">from URL path parameter</text>
+</g>
+
+<!-- Arrow: Process bottom (700,1066) to Decision top (700,1126). gap=60 -->
+<line x1="700" y1="1066" x2="700" y2="1126" class="arrow"/>
+
+<!-- Decision: User found? cx=700, cy=1166, dx=110, dy=40. top=1126, bottom=1206 -->
+<!-- Right vertex at 700+110=810. Left vertex at 700-110=590 -->
+<g class="node" data-title="User found by username?" data-desc="Looks up the user in the database by the username extracted from the URL path.&#10;No password check is performed on this path. The user is trusted based on the URL.&#10;If no user exists with that username, the request fails.">
+  <polygon points="700,1126 810,1166 700,1206 590,1166"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="700" y="1162" dy="4" class="decision-text">User found?</text>
+</g>
+
+<!-- No: right from (810,1166) to 401 error. cx=920, rx=55, left=865. gap=55 -->
+<line x1="810" y1="1166" x2="865" y2="1166" class="arrow-no"/>
+<text x="816" y="1160" class="no-label">No</text>
+
+<g class="node" data-title="Return 401 Unauthorized" data-desc="No user exists with the username specified in the URL path.&#10;This typically means the URL is malformed or points to a non-existent user account.">
+  <ellipse cx="920" cy="1166" rx="55" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="920" y="1160" dy="4" class="node-text">Return 401</text>
+  <text x="920" y="1176" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- Yes: down from (700,1206) to Success top (700,1266). gap=60 -->
+<line x1="700" y1="1206" x2="700" y2="1266" class="arrow-yes"/>
+<text x="710" y="1240" class="yes-label">Yes</text>
+
+<!-- Success: Return User (path-based). cx=700, cy=1290, rx=110, ry=24. top=1266, bottom=1314 -->
+<g class="node" data-title="Return User (path-based)" data-desc="The user was resolved from the URL path without password verification.&#10;This is safe because the URL itself determines which user's data is accessed, and calendar-level access control is enforced separately.">
+  <ellipse cx="700" cy="1290" rx="110" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="700" y="1284" dy="4" class="node-text">Return User</text>
+  <text x="700" y="1300" dy="4" class="node-sub">Path-based (no password)</text>
+</g>
+
+<!-- ========================================================= -->
+<!-- SECTION 3: require_bearer_auth (MCP middleware)            -->
+<!-- Section 2 bottom = max(1436, 1314) = 1436. Divider at 1480. -->
+<!-- ========================================================= -->
+
+<!-- Section divider -->
+<line x1="60" y1="1480" x2="940" y2="1480" stroke="#ccc" stroke-width="1" stroke-dasharray="8,4"/>
+
+<!-- Section header -->
+<rect x="60" y="1500" width="880" height="30" rx="4" fill="#e8e8e8"/>
+<text x="500" y="1521" class="section-title">require_bearer_auth (MCP middleware)</text>
+
+<!-- START: cx=350, cy=1570, rx=125, ry=24. top=1546, bottom=1594 -->
+<g class="node" data-title="require_bearer_auth middleware" data-desc="All requests to the MCP port (5233) pass through this middleware before reaching any handler.&#10;It enforces Bearer token authentication using tokens stored in the mcp_tokens table.&#10;Unlike CalDAV auth, this uses token-based authentication rather than username/password.">
+  <ellipse cx="350" cy="1570" rx="125" ry="24" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1564" dy="4" class="node-text">require_bearer_auth</text>
+  <text x="350" y="1580" dy="4" class="node-sub">MCP port 5233 middleware</text>
+</g>
+
+<!-- Arrow: START bottom (350,1594) to Decision top (350,1654). gap=60 -->
+<line x1="350" y1="1594" x2="350" y2="1654" class="arrow"/>
+
+<!-- Decision: Bearer token present? cx=350, cy=1694, top=1654, bottom=1734 -->
+<g class="node" data-title="Bearer token in Authorization header?" data-desc="Checks whether the Authorization header is present and starts with the 'Bearer ' prefix.&#10;MCP clients must include a valid bearer token in every request.&#10;If no token is found, the request is immediately rejected.">
+  <polygon points="350,1654 460,1694 350,1734 240,1694"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1690" dy="4" class="decision-text">Bearer token</text>
+  <text x="350" y="1704" dy="4" class="decision-text">present?</text>
+</g>
+
+<!-- No: right from (460,1694) to 401. cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="1694" x2="540" y2="1694" class="arrow-no"/>
+<text x="466" y="1688" class="no-label">No</text>
+
+<g class="node" data-title="Return 401 Unauthorized" data-desc="No Bearer token was found in the Authorization header.&#10;The client must include a valid MCP token to access the MCP API.">
+  <ellipse cx="620" cy="1694" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="1688" dy="4" class="node-text">Return 401</text>
+  <text x="620" y="1704" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- Yes: down from (350,1734) to Process top (350,1794). gap=60 -->
+<line x1="350" y1="1734" x2="350" y2="1794" class="arrow-yes"/>
+<text x="360" y="1768" class="yes-label">Yes</text>
+
+<!-- Process: Hash token with Argon2id. x=230, y=1794, w=240, h=44. cx=350, bottom=1838 -->
+<g class="node" data-title="Hash token with Argon2id" data-desc="The raw bearer token is hashed using Argon2id to produce a hash that can be compared against stored token hashes.&#10;Tokens are never stored in plaintext; only their Argon2id hashes are kept in the database.">
+  <rect x="230" y="1794" width="240" height="44" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1794" dy="27" class="node-text">Hash token with Argon2id</text>
+</g>
+
+<!-- Arrow: Process bottom (350,1838) to Decision top (350,1898). gap=60 -->
+<line x1="350" y1="1838" x2="350" y2="1898" class="arrow"/>
+
+<!-- Decision: Token hash matches? cx=350, cy=1938, top=1898, bottom=1978 -->
+<g class="node" data-title="Token hash matches stored hash?" data-desc="Compares the computed Argon2id hash against all token hashes in the mcp_tokens table.&#10;If no matching hash is found, the token is invalid and the request is rejected.">
+  <polygon points="350,1898 460,1938 350,1978 240,1938"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="1934" dy="4" class="decision-text">Token hash</text>
+  <text x="350" y="1948" dy="4" class="decision-text">matches?</text>
+</g>
+
+<!-- No: right from (460,1938) to 401. cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="1938" x2="540" y2="1938" class="arrow-no"/>
+<text x="466" y="1932" class="no-label">No</text>
+
+<g class="node" data-title="Return 401 Unauthorized" data-desc="The token hash does not match any stored token in the mcp_tokens table.&#10;The token may be fabricated or was previously deleted.">
+  <ellipse cx="620" cy="1938" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="1932" dy="4" class="node-text">Return 401</text>
+  <text x="620" y="1948" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- Yes: down from (350,1978) to Decision top (350,2038). gap=60 -->
+<line x1="350" y1="1978" x2="350" y2="2038" class="arrow-yes"/>
+<text x="360" y="2012" class="yes-label">Yes</text>
+
+<!-- Decision: Token expired? cx=350, cy=2078, top=2038, bottom=2118 -->
+<g class="node" data-title="Token expired?" data-desc="Checks whether the matched token has passed its expiration timestamp.&#10;MCP tokens have a configurable lifetime. Expired tokens are treated as invalid even if the hash matches.">
+  <polygon points="350,2038 460,2078 350,2118 240,2078"
+           fill="url(#decisionGrad)" filter="url(#shadow)"/>
+  <text x="350" y="2074" dy="4" class="decision-text">Token expired?</text>
+</g>
+
+<!-- Yes (expired = bad): right from (460,2078) to 401. cx=620, rx=80, left=540. gap=80 -->
+<line x1="460" y1="2078" x2="540" y2="2078" class="arrow-yes"/>
+<text x="466" y="2072" class="yes-label">Yes</text>
+
+<g class="node" data-title="Return 401 Unauthorized" data-desc="The token was valid but has expired.&#10;The client must obtain a new token to continue accessing the MCP API.">
+  <ellipse cx="620" cy="2078" rx="80" ry="24" fill="url(#errorGrad)" filter="url(#shadow)"/>
+  <text x="620" y="2072" dy="4" class="node-text">Return 401</text>
+  <text x="620" y="2088" dy="4" class="node-sub">Unauthorized</text>
+</g>
+
+<!-- No (not expired = good): down from (350,2118) to Process top (350,2178). gap=60 -->
+<line x1="350" y1="2118" x2="350" y2="2178" class="arrow-no"/>
+<text x="360" y="2152" class="no-label">No</text>
+
+<!-- Process: Inject user_id. x=240, y=2178, w=220, h=44. cx=350, bottom=2222 -->
+<g class="node" data-title="Inject user_id into request" data-desc="Extracts the user_id associated with the matched token and injects it into the request extensions.&#10;Downstream MCP handlers use this user_id to scope all operations to the authenticated user.">
+  <rect x="240" y="2178" width="220" height="44" rx="6" fill="url(#processGrad)" filter="url(#shadow)"/>
+  <text x="350" y="2178" dy="22" class="node-text">Inject user_id</text>
+  <text x="350" y="2178" dy="38" class="node-sub">into request extensions</text>
+</g>
+
+<!-- Arrow: Process bottom (350,2222) to Success top (350,2282). gap=60 -->
+<line x1="350" y1="2222" x2="350" y2="2282" class="arrow"/>
+
+<!-- Success: Continue to handler. cx=350, cy=2306, rx=120, ry=24. top=2282, bottom=2330 -->
+<g class="node" data-title="Continue to handler" data-desc="The request has been authenticated. The MCP handler receives the request with the user_id available in the request extensions.&#10;All tool calls will be scoped to this user's calendars and events.">
+  <ellipse cx="350" cy="2306" rx="120" ry="24" fill="url(#endGrad)" filter="url(#shadow)"/>
+  <text x="350" y="2300" dy="4" class="node-text">Continue to handler</text>
+  <text x="350" y="2316" dy="4" class="node-sub">Authenticated (user_id set)</text>
+</g>
+
+<!-- Arrow: Success bottom (350,2330) to END top (350,2390). gap=60 -->
+<line x1="350" y1="2330" x2="350" y2="2390" class="arrow"/>
+
+<!-- END terminal: cx=350, cy=2410, rx=40, ry=20. top=2390, bottom=2430 -->
+<g class="node" data-title="END" data-desc="End of authentication middleware processing.">
+  <ellipse cx="350" cy="2410" rx="40" ry="20" fill="url(#startGrad)" filter="url(#shadow)"/>
+  <text x="350" y="2410" dy="5" class="node-text">END</text>
+</g>
+
+<!-- Popup -->
+<foreignObject id="popup" class="popup-container" x="0" y="0" width="340" height="200">
+  <div xmlns="http://www.w3.org/1999/xhtml" style="font:12px/1.5 sans-serif;color:#333;
+       background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);
+       padding:12px 16px;position:relative;max-height:188px;overflow-y:auto;">
+    <div id="popup-close" style="position:absolute;top:6px;right:10px;cursor:pointer;
+         font:bold 16px sans-serif;color:#999;line-height:1;">X</div>
+    <div id="popup-title" style="font:bold 13px sans-serif;color:#222;margin-bottom:6px;
+         padding-right:20px;"></div>
+    <div id="popup-desc" style="font:12px/1.5 sans-serif;color:#555;white-space:pre-wrap;"></div>
+  </div>
+</foreignObject>
+
+<script><![CDATA[
+(function(){
+  var popup=document.getElementById('popup');
+  var pTitle=document.getElementById('popup-title');
+  var pDesc=document.getElementById('popup-desc');
+  var pClose=document.getElementById('popup-close');
+  var svg=popup.ownerSVGElement;
+  document.querySelectorAll('.node').forEach(function(n){
+    n.addEventListener('click',function(e){
+      e.stopPropagation();
+      pTitle.textContent=n.dataset.title;
+      pDesc.textContent=n.dataset.desc;
+      var b=n.getBBox();
+      var x=Math.min(Math.max(b.x+b.width/2-170,10),svg.viewBox.baseVal.width-350);
+      var y=b.y-210;
+      if(y<10) y=b.y+b.height+10;
+      popup.setAttribute('x',x);
+      popup.setAttribute('y',y);
+      popup.style.display='block';
+      popup.classList.add('visible');
+    });
+  });
+  function hidePopup(){popup.classList.remove('visible');popup.style.display='none';}
+  pClose.addEventListener('click',function(e){e.stopPropagation();hidePopup();});
+  svg.addEventListener('click',function(){hidePopup();});
+})();
+]]></script>
+
+<!-- LEGEND: LX=240, LY=2490. bottom=2700. canvas=2830 -->
+<!-- LX = (1000 - 520) / 2 = 240 -->
+<!-- LY = 2430 + 60 = 2490 -->
+<rect x="240" y="2490" width="520" height="210" rx="8"
+      fill="#f8f9fa" stroke="#999" stroke-width="1.5"/>
+<text x="500" y="2512" class="label-text">Legend</text>
+
+<!-- Left column -->
+<ellipse cx="270" cy="2540" rx="14" ry="10" fill="url(#startGrad)"/>
+<text x="292" y="2544" class="legend-text">Start / End</text>
+
+<rect x="256" y="2562" width="28" height="16" rx="3" fill="url(#processGrad)"/>
+<text x="292" y="2574" class="legend-text">Process</text>
+
+<polygon points="270,2590 282,2600 270,2610 258,2600"
+         fill="url(#decisionGrad)"/>
+<text x="292" y="2604" class="legend-text">Decision</text>
+
+<ellipse cx="270" cy="2630" rx="14" ry="10" fill="url(#endGrad)"/>
+<text x="292" y="2634" class="legend-text">Success response</text>
+
+<ellipse cx="270" cy="2660" rx="14" ry="10" fill="url(#errorGrad)"/>
+<text x="292" y="2664" class="legend-text">Error response</text>
+
+<!-- Right column -->
+<line x1="530" y1="2540" x2="560" y2="2540" class="arrow-yes"/>
+<text x="570" y="2544" class="legend-text">Yes / true path</text>
+
+<line x1="530" y1="2570" x2="560" y2="2570" class="arrow-no"/>
+<text x="570" y="2574" class="legend-text">No / false path</text>
+
+<line x1="530" y1="2600" x2="560" y2="2600" class="arrow"/>
+<text x="570" y="2604" class="legend-text">Main flow / continue</text>
+
+</svg>
