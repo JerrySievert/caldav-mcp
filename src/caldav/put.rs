@@ -1,6 +1,6 @@
 use axum::body::Body;
 use axum::extract::{Path, State};
-use axum::http::{header, Request, StatusCode};
+use axum::http::{Request, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use sqlx::SqlitePool;
 
@@ -42,22 +42,21 @@ pub async fn handle_put(
     let uid = fields.uid.as_deref().unwrap_or(&uid_from_url);
 
     // If If-Match is present, verify the current ETag matches
-    if let Some(expected_etag) = &if_match {
-        if expected_etag != "*" {
-            match events::get_object_by_uid(&pool, &calendar_id, uid).await {
-                Ok(Some(existing)) => {
-                    if existing.etag != *expected_etag {
-                        return (StatusCode::PRECONDITION_FAILED, "ETag mismatch").into_response();
-                    }
+    if let Some(expected_etag) = &if_match
+        && expected_etag != "*"
+    {
+        match events::get_object_by_uid(&pool, &calendar_id, uid).await {
+            Ok(Some(existing)) => {
+                if existing.etag != *expected_etag {
+                    return (StatusCode::PRECONDITION_FAILED, "ETag mismatch").into_response();
                 }
-                Ok(None) => {
-                    return (StatusCode::PRECONDITION_FAILED, "Object does not exist")
-                        .into_response();
-                }
-                Err(e) => {
-                    tracing::error!("Failed to check existing object: {e}");
-                    return (StatusCode::INTERNAL_SERVER_ERROR, "Internal error").into_response();
-                }
+            }
+            Ok(None) => {
+                return (StatusCode::PRECONDITION_FAILED, "Object does not exist").into_response();
+            }
+            Err(e) => {
+                tracing::error!("Failed to check existing object: {e}");
+                return (StatusCode::INTERNAL_SERVER_ERROR, "Internal error").into_response();
             }
         }
     }
@@ -68,10 +67,12 @@ pub async fn handle_put(
         &calendar_id,
         uid,
         &ical_data,
-        &fields.component_type,
-        fields.dtstart.as_deref(),
-        fields.dtend.as_deref(),
-        fields.summary.as_deref(),
+        events::ObjectFields {
+            component_type: &fields.component_type,
+            dtstart: fields.dtstart.as_deref(),
+            dtend: fields.dtend.as_deref(),
+            summary: fields.summary.as_deref(),
+        },
     )
     .await
     {

@@ -4,6 +4,14 @@ use uuid::Uuid;
 use super::models::{CalendarObject, SyncChange};
 use crate::error::{AppError, AppResult};
 
+/// Extracted iCalendar fields stored alongside the raw `ical_data`.
+pub struct ObjectFields<'a> {
+    pub component_type: &'a str,
+    pub dtstart: Option<&'a str>,
+    pub dtend: Option<&'a str>,
+    pub summary: Option<&'a str>,
+}
+
 /// Generate a new ETag value.
 fn new_etag() -> String {
     format!("\"{}\"", Uuid::new_v4())
@@ -15,16 +23,19 @@ pub async fn upsert_object(
     calendar_id: &str,
     uid: &str,
     ical_data: &str,
-    component_type: &str,
-    dtstart: Option<&str>,
-    dtend: Option<&str>,
-    summary: Option<&str>,
+    fields: ObjectFields<'_>,
 ) -> AppResult<(CalendarObject, bool)> {
+    let ObjectFields {
+        component_type,
+        dtstart,
+        dtend,
+        summary,
+    } = fields;
     let existing = get_object_by_uid(pool, calendar_id, uid).await?;
     let is_new = existing.is_none();
 
     let etag = new_etag();
-    let new_sync_token = format!("sync-{}", Uuid::now_v7());
+    let new_sync_token = format!("data:,sync-{}", Uuid::now_v7());
 
     if is_new {
         let id = Uuid::now_v7().to_string();
@@ -95,10 +106,7 @@ pub async fn get_object_by_uid(
 }
 
 /// List all calendar objects in a calendar.
-pub async fn list_objects(
-    pool: &SqlitePool,
-    calendar_id: &str,
-) -> AppResult<Vec<CalendarObject>> {
+pub async fn list_objects(pool: &SqlitePool, calendar_id: &str) -> AppResult<Vec<CalendarObject>> {
     let objs = sqlx::query_as::<_, CalendarObject>(
         "SELECT * FROM calendar_objects WHERE calendar_id = ? ORDER BY dtstart",
     )
@@ -159,18 +167,12 @@ pub async fn get_objects_by_uids(
 }
 
 /// Delete a calendar object by UID. Returns the deleted object's ETag.
-pub async fn delete_object(
-    pool: &SqlitePool,
-    calendar_id: &str,
-    uid: &str,
-) -> AppResult<()> {
-    let result = sqlx::query(
-        "DELETE FROM calendar_objects WHERE calendar_id = ? AND uid = ?",
-    )
-    .bind(calendar_id)
-    .bind(uid)
-    .execute(pool)
-    .await?;
+pub async fn delete_object(pool: &SqlitePool, calendar_id: &str, uid: &str) -> AppResult<()> {
+    let result = sqlx::query("DELETE FROM calendar_objects WHERE calendar_id = ? AND uid = ?")
+        .bind(calendar_id)
+        .bind(uid)
+        .execute(pool)
+        .await?;
 
     if result.rows_affected() == 0 {
         return Err(AppError::NotFound(format!(
@@ -178,7 +180,7 @@ pub async fn delete_object(
         )));
     }
 
-    let new_sync_token = format!("sync-{}", Uuid::now_v7());
+    let new_sync_token = format!("data:,sync-{}", Uuid::now_v7());
     log_sync_change(pool, calendar_id, uid, "deleted", &new_sync_token).await?;
     super::calendars::bump_ctag(pool, calendar_id).await?;
 
@@ -271,10 +273,12 @@ mod tests {
             &cal_id,
             "event-1@example.com",
             "BEGIN:VCALENDAR\r\nEND:VCALENDAR",
-            "VEVENT",
-            Some("20260301T090000Z"),
-            Some("20260301T100000Z"),
-            Some("Meeting"),
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: Some("20260301T090000Z"),
+                dtend: Some("20260301T100000Z"),
+                summary: Some("Meeting"),
+            },
         )
         .await
         .unwrap();
@@ -294,10 +298,12 @@ mod tests {
             &cal_id,
             "event-1@example.com",
             "original data",
-            "VEVENT",
-            Some("20260301T090000Z"),
-            Some("20260301T100000Z"),
-            Some("Meeting"),
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: Some("20260301T090000Z"),
+                dtend: Some("20260301T100000Z"),
+                summary: Some("Meeting"),
+            },
         )
         .await
         .unwrap();
@@ -307,10 +313,12 @@ mod tests {
             &cal_id,
             "event-1@example.com",
             "updated data",
-            "VEVENT",
-            Some("20260301T090000Z"),
-            Some("20260301T110000Z"),
-            Some("Long Meeting"),
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: Some("20260301T090000Z"),
+                dtend: Some("20260301T110000Z"),
+                summary: Some("Long Meeting"),
+            },
         )
         .await
         .unwrap();
@@ -326,13 +334,33 @@ mod tests {
         let (pool, _, cal_id) = setup().await;
 
         upsert_object(
-            &pool, &cal_id, "e1@ex.com", "data1", "VEVENT",
-            Some("20260301T090000Z"), Some("20260301T100000Z"), Some("First"),
-        ).await.unwrap();
+            &pool,
+            &cal_id,
+            "e1@ex.com",
+            "data1",
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: Some("20260301T090000Z"),
+                dtend: Some("20260301T100000Z"),
+                summary: Some("First"),
+            },
+        )
+        .await
+        .unwrap();
         upsert_object(
-            &pool, &cal_id, "e2@ex.com", "data2", "VEVENT",
-            Some("20260302T090000Z"), Some("20260302T100000Z"), Some("Second"),
-        ).await.unwrap();
+            &pool,
+            &cal_id,
+            "e2@ex.com",
+            "data2",
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: Some("20260302T090000Z"),
+                dtend: Some("20260302T100000Z"),
+                summary: Some("Second"),
+            },
+        )
+        .await
+        .unwrap();
 
         let objs = list_objects(&pool, &cal_id).await.unwrap();
         assert_eq!(objs.len(), 2);
@@ -343,17 +371,37 @@ mod tests {
         let (pool, _, cal_id) = setup().await;
 
         upsert_object(
-            &pool, &cal_id, "e1@ex.com", "data1", "VEVENT",
-            Some("20260301T090000Z"), Some("20260301T100000Z"), Some("March"),
-        ).await.unwrap();
+            &pool,
+            &cal_id,
+            "e1@ex.com",
+            "data1",
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: Some("20260301T090000Z"),
+                dtend: Some("20260301T100000Z"),
+                summary: Some("March"),
+            },
+        )
+        .await
+        .unwrap();
         upsert_object(
-            &pool, &cal_id, "e2@ex.com", "data2", "VEVENT",
-            Some("20260401T090000Z"), Some("20260401T100000Z"), Some("April"),
-        ).await.unwrap();
+            &pool,
+            &cal_id,
+            "e2@ex.com",
+            "data2",
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: Some("20260401T090000Z"),
+                dtend: Some("20260401T100000Z"),
+                summary: Some("April"),
+            },
+        )
+        .await
+        .unwrap();
 
-        let objs = list_objects_in_range(
-            &pool, &cal_id, "20260301T000000Z", "20260331T235959Z",
-        ).await.unwrap();
+        let objs = list_objects_in_range(&pool, &cal_id, "20260301T000000Z", "20260331T235959Z")
+            .await
+            .unwrap();
 
         assert_eq!(objs.len(), 1);
         assert_eq!(objs[0].summary.as_deref(), Some("March"));
@@ -364,13 +412,25 @@ mod tests {
         let (pool, _, cal_id) = setup().await;
 
         upsert_object(
-            &pool, &cal_id, "e1@ex.com", "data", "VEVENT",
-            None, None, None,
-        ).await.unwrap();
+            &pool,
+            &cal_id,
+            "e1@ex.com",
+            "data",
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: None,
+                dtend: None,
+                summary: None,
+            },
+        )
+        .await
+        .unwrap();
 
         delete_object(&pool, &cal_id, "e1@ex.com").await.unwrap();
 
-        let obj = get_object_by_uid(&pool, &cal_id, "e1@ex.com").await.unwrap();
+        let obj = get_object_by_uid(&pool, &cal_id, "e1@ex.com")
+            .await
+            .unwrap();
         assert!(obj.is_none());
     }
 
@@ -386,9 +446,48 @@ mod tests {
     async fn test_get_objects_by_uids() {
         let (pool, _, cal_id) = setup().await;
 
-        upsert_object(&pool, &cal_id, "e1@ex.com", "d1", "VEVENT", None, None, None).await.unwrap();
-        upsert_object(&pool, &cal_id, "e2@ex.com", "d2", "VEVENT", None, None, None).await.unwrap();
-        upsert_object(&pool, &cal_id, "e3@ex.com", "d3", "VEVENT", None, None, None).await.unwrap();
+        upsert_object(
+            &pool,
+            &cal_id,
+            "e1@ex.com",
+            "d1",
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: None,
+                dtend: None,
+                summary: None,
+            },
+        )
+        .await
+        .unwrap();
+        upsert_object(
+            &pool,
+            &cal_id,
+            "e2@ex.com",
+            "d2",
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: None,
+                dtend: None,
+                summary: None,
+            },
+        )
+        .await
+        .unwrap();
+        upsert_object(
+            &pool,
+            &cal_id,
+            "e3@ex.com",
+            "d3",
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: None,
+                dtend: None,
+                summary: None,
+            },
+        )
+        .await
+        .unwrap();
 
         let uids = vec!["e1@ex.com".to_string(), "e3@ex.com".to_string()];
         let objs = get_objects_by_uids(&pool, &cal_id, &uids).await.unwrap();
@@ -400,15 +499,46 @@ mod tests {
         let (pool, _, cal_id) = setup().await;
 
         // Get the initial sync token
-        let cal = calendars::get_calendar_by_id(&pool, &cal_id).await.unwrap().unwrap();
+        let cal = calendars::get_calendar_by_id(&pool, &cal_id)
+            .await
+            .unwrap()
+            .unwrap();
         let initial_token = cal.sync_token.clone();
 
         // Make some changes
-        upsert_object(&pool, &cal_id, "e1@ex.com", "d1", "VEVENT", None, None, None).await.unwrap();
-        upsert_object(&pool, &cal_id, "e2@ex.com", "d2", "VEVENT", None, None, None).await.unwrap();
+        upsert_object(
+            &pool,
+            &cal_id,
+            "e1@ex.com",
+            "d1",
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: None,
+                dtend: None,
+                summary: None,
+            },
+        )
+        .await
+        .unwrap();
+        upsert_object(
+            &pool,
+            &cal_id,
+            "e2@ex.com",
+            "d2",
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: None,
+                dtend: None,
+                summary: None,
+            },
+        )
+        .await
+        .unwrap();
 
         // Get changes since initial token
-        let changes = get_sync_changes_since(&pool, &cal_id, &initial_token).await.unwrap();
+        let changes = get_sync_changes_since(&pool, &cal_id, &initial_token)
+            .await
+            .unwrap();
         assert_eq!(changes.len(), 2);
         assert_eq!(changes[0].change_type, "created");
         assert_eq!(changes[1].change_type, "created");
@@ -418,13 +548,32 @@ mod tests {
     async fn test_upsert_bumps_ctag() {
         let (pool, _, cal_id) = setup().await;
 
-        let cal_before = calendars::get_calendar_by_id(&pool, &cal_id).await.unwrap().unwrap();
+        let cal_before = calendars::get_calendar_by_id(&pool, &cal_id)
+            .await
+            .unwrap()
+            .unwrap();
 
         tokio::time::sleep(std::time::Duration::from_millis(2)).await;
 
-        upsert_object(&pool, &cal_id, "e1@ex.com", "d1", "VEVENT", None, None, None).await.unwrap();
+        upsert_object(
+            &pool,
+            &cal_id,
+            "e1@ex.com",
+            "d1",
+            ObjectFields {
+                component_type: "VEVENT",
+                dtstart: None,
+                dtend: None,
+                summary: None,
+            },
+        )
+        .await
+        .unwrap();
 
-        let cal_after = calendars::get_calendar_by_id(&pool, &cal_id).await.unwrap().unwrap();
+        let cal_after = calendars::get_calendar_by_id(&pool, &cal_id)
+            .await
+            .unwrap()
+            .unwrap();
         assert_ne!(cal_before.ctag, cal_after.ctag);
     }
 }

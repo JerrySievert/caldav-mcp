@@ -56,3 +56,91 @@ impl IntoResponse for AppError {
 
 /// Convenience type alias for handlers.
 pub type AppResult<T> = Result<T, AppError>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::response::IntoResponse;
+
+    #[test]
+    fn test_not_found_maps_to_404() {
+        let err = AppError::NotFound("thing".to_string());
+        let resp = err.into_response();
+        assert_eq!(resp.status(), axum::http::StatusCode::NOT_FOUND);
+    }
+
+    #[test]
+    fn test_unauthorized_maps_to_401() {
+        let err = AppError::Unauthorized;
+        let resp = err.into_response();
+        assert_eq!(resp.status(), axum::http::StatusCode::UNAUTHORIZED);
+    }
+
+    #[test]
+    fn test_forbidden_maps_to_403() {
+        let err = AppError::Forbidden("no access".to_string());
+        let resp = err.into_response();
+        assert_eq!(resp.status(), axum::http::StatusCode::FORBIDDEN);
+    }
+
+    #[test]
+    fn test_bad_request_maps_to_400() {
+        let err = AppError::BadRequest("bad".to_string());
+        let resp = err.into_response();
+        assert_eq!(resp.status(), axum::http::StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn test_conflict_maps_to_409() {
+        let err = AppError::Conflict("conflict".to_string());
+        let resp = err.into_response();
+        assert_eq!(resp.status(), axum::http::StatusCode::CONFLICT);
+    }
+
+    #[test]
+    fn test_precondition_failed_maps_to_412() {
+        let err = AppError::PreconditionFailed("etag mismatch".to_string());
+        let resp = err.into_response();
+        assert_eq!(resp.status(), axum::http::StatusCode::PRECONDITION_FAILED);
+    }
+
+    #[tokio::test]
+    async fn test_database_error_maps_to_500() {
+        let db_err = sqlx::Error::RowNotFound;
+        let err = AppError::Database(db_err);
+        let resp = err.into_response();
+        assert_eq!(resp.status(), axum::http::StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    #[tokio::test]
+    async fn test_internal_error_maps_to_500() {
+        let err = AppError::Internal(anyhow::anyhow!("internal failure"));
+        let resp = err.into_response();
+        assert_eq!(resp.status(), axum::http::StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    #[test]
+    fn test_error_display_messages() {
+        assert_eq!(AppError::Unauthorized.to_string(), "unauthorized");
+        assert_eq!(
+            AppError::NotFound("x".to_string()).to_string(),
+            "not found: x"
+        );
+        assert_eq!(
+            AppError::Forbidden("y".to_string()).to_string(),
+            "forbidden: y"
+        );
+        assert_eq!(
+            AppError::BadRequest("z".to_string()).to_string(),
+            "bad request: z"
+        );
+        assert_eq!(
+            AppError::Conflict("w".to_string()).to_string(),
+            "conflict: w"
+        );
+        assert_eq!(
+            AppError::PreconditionFailed("v".to_string()).to_string(),
+            "precondition failed: v"
+        );
+    }
+}

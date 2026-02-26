@@ -1,11 +1,14 @@
 use axum::body::Body;
 use axum::extract::{Path, State};
-use axum::http::{header, Request, StatusCode};
+use axum::http::{Request, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use sqlx::SqlitePool;
 
+use super::HrefContext;
+use super::encode_email_for_path;
 use super::xml::multistatus::MultistatusBuilder;
-use super::xml::{parse, properties};
+use super::xml::parse::{self, PropfindRequest};
+use super::xml::properties;
 use crate::db::models::User;
 use crate::db::{calendars, events};
 
@@ -21,15 +24,17 @@ pub async fn handle_calendar_home(
     let body = axum::body::to_bytes(request.into_body(), 64 * 1024)
         .await
         .unwrap_or_default();
-    let _propfind = parse::parse_propfind(&body);
+    let propfind = parse::parse_propfind(&body);
 
     let mut builder = MultistatusBuilder::new();
 
     // The calendar home itself
+    let (found, not_found) =
+        properties::filter_props(&propfind, properties::calendar_home_props(&user.username));
     builder.add_response(
         &format!("/caldav/users/{}/", user.username),
-        properties::calendar_home_props(&user.username),
-        vec![],
+        found,
+        not_found,
     );
 
     // If Depth:1, list all accessible calendars
@@ -40,11 +45,11 @@ pub async fn handle_calendar_home(
 
         for cal in &cals {
             let href = properties::calendar_href(&user.username, &cal.id);
-            builder.add_response(
-                &href,
+            let (found, not_found) = properties::filter_props(
+                &propfind,
                 properties::calendar_props(&user.username, cal),
-                vec![],
             );
+            builder.add_response(&href, found, not_found);
         }
     }
 
@@ -52,6 +57,7 @@ pub async fn handle_calendar_home(
 }
 
 /// Handle PROPFIND for a calendar collection: /caldav/users/{username}/{calendar_id}/
+/// or /calendar/dav/{email}/user/{calendar_id}/
 /// With Depth:1, also lists all calendar objects.
 pub async fn handle_calendar(
     State(pool): State<SqlitePool>,
@@ -59,11 +65,12 @@ pub async fn handle_calendar(
     request: Request<Body>,
 ) -> Response {
     let user = request.extensions().get::<User>().unwrap().clone();
+    let href_ctx = request.extensions().get::<HrefContext>().cloned();
     let depth = get_depth(&request);
     let body = axum::body::to_bytes(request.into_body(), 64 * 1024)
         .await
         .unwrap_or_default();
-    let _propfind = parse::parse_propfind(&body);
+    let propfind = parse::parse_propfind(&body);
 
     // Find the calendar
     let calendar = match calendars::get_calendar_by_id(&pool, &calendar_id).await {
@@ -75,13 +82,19 @@ pub async fn handle_calendar(
 
     let mut builder = MultistatusBuilder::new();
 
+    // Use context-aware hrefs if available, otherwise default to username-based
+    let ctx = href_ctx.unwrap_or(HrefContext {
+        email: None,
+        username: user.username.clone(),
+    });
+
     // The calendar collection itself
-    let href = properties::calendar_href(&user.username, &calendar.id);
-    builder.add_response(
-        &href,
-        properties::calendar_props(&user.username, &calendar),
-        vec![],
+    let href = properties::calendar_href_for_context(&ctx, &calendar.id);
+    let (found, not_found) = properties::filter_props(
+        &propfind,
+        properties::calendar_props_for_context(&ctx, &calendar),
     );
+    builder.add_response(&href, found, not_found);
 
     // If Depth:1, list all calendar objects
     if depth >= 1 {
@@ -91,12 +104,12 @@ pub async fn handle_calendar(
 
         for obj in &objects {
             let obj_href =
-                properties::calendar_object_href(&user.username, &calendar.id, &obj.uid);
-            builder.add_response(
-                &obj_href,
+                properties::calendar_object_href_for_context(&ctx, &calendar.id, &obj.uid);
+            let (found, not_found) = properties::filter_props(
+                &propfind,
                 properties::calendar_object_props(&user.username, &calendar.id, obj, false),
-                vec![],
             );
+            builder.add_response(&obj_href, found, not_found);
         }
     }
 
@@ -114,11 +127,9 @@ pub fn get_depth_from_headers(headers: &axum::http::HeaderMap) -> u32 {
     headers
         .get("Depth")
         .and_then(|v| v.to_str().ok())
-        .and_then(|v| match v {
-            "0" => Some(0),
-            "1" => Some(1),
-            "infinity" => Some(1), // Treat infinity as 1 for safety
-            _ => Some(0),
+        .map(|v| match v {
+            "1" => 1,
+            _ => 0, // "0", "infinity" (capped at 1 for safety), and unknown all map to 0
         })
         .unwrap_or(0)
 }
@@ -139,89 +150,41 @@ pub async fn handle_email_home(
     user: User,
     request_path: String,
     depth: u32,
+    email: &str,
+    propfind: &PropfindRequest,
 ) -> Response {
+    let ctx = HrefContext {
+        email: Some(encode_email_for_path(email)),
+        username: user.username.clone(),
+    };
     let mut builder = MultistatusBuilder::new();
 
     // The email home itself — advertise principal + calendar-home-set pointing
     // back to this same URL, so dataaccessd knows it's already at the right place.
-    builder.add_response(
-        &request_path,
-        properties::email_home_props(&user.username, &request_path),
-        vec![],
+    let (found, not_found) = properties::filter_props(
+        propfind,
+        properties::email_home_props(&user.username, email, &request_path),
     );
+    builder.add_response(&request_path, found, not_found);
 
-    // If Depth:1, include all accessible calendars
+    // If Depth:1, include all accessible calendars with email-based hrefs
+    // so dataaccessd can access them under the email path.
     if depth >= 1 {
         let cals = calendars::list_calendars_for_user(&pool, &user.id)
             .await
             .unwrap_or_default();
 
         for cal in &cals {
-            let href = properties::calendar_href(&user.username, &cal.id);
-            builder.add_response(
-                &href,
-                properties::calendar_props(&user.username, cal),
-                vec![],
+            let href = properties::calendar_href_for_context(&ctx, &cal.id);
+            let (found, not_found) = properties::filter_props(
+                propfind,
+                properties::calendar_props_for_context(&ctx, cal),
             );
+            builder.add_response(&href, found, not_found);
         }
     }
 
     multistatus_response(builder.build())
-}
-
-/// Handle unauthenticated PROPFIND at the email discovery URL when the
-/// email matches a known user. Returns the calendar list (dataaccessd needs
-/// this at Depth:1) but uses a generic displayname to avoid leaking the
-/// actual username.
-pub async fn handle_email_home_unauthenticated(
-    State(pool): State<SqlitePool>,
-    user: User,
-    request_path: String,
-    depth: u32,
-) -> Response {
-    let mut builder = MultistatusBuilder::new();
-
-    // Use the unauthenticated props (generic displayname, no username)
-    builder.add_response(
-        &request_path,
-        properties::email_home_props_unauthenticated(&request_path),
-        vec![],
-    );
-
-    // If Depth:1, include all accessible calendars — dataaccessd needs this
-    // to populate the calendar list in Apple Calendar.
-    if depth >= 1 {
-        let cals = calendars::list_calendars_for_user(&pool, &user.id)
-            .await
-            .unwrap_or_default();
-
-        for cal in &cals {
-            let href = properties::calendar_href(&user.username, &cal.id);
-            builder.add_response(
-                &href,
-                properties::calendar_props(&user.username, cal),
-                vec![],
-            );
-        }
-    }
-
-    multistatus_response_with_auth_challenge(builder.build())
-}
-
-/// Handle unauthenticated PROPFIND at the email discovery URL when the
-/// email does NOT match any user. Returns only minimal structural props.
-/// Produces the same Depth:0 response shape as the known-user case to
-/// prevent email enumeration.
-pub async fn handle_email_discovery_unauthenticated(request_path: String) -> Response {
-    let mut builder = MultistatusBuilder::new();
-    builder.add_response(
-        &request_path,
-        properties::email_home_props_unauthenticated(&request_path),
-        vec![],
-    );
-    // Include WWW-Authenticate header to hint that auth is available.
-    // accountsd uses this to prompt for credentials.
-    multistatus_response_with_auth_challenge(builder.build())
 }
 
 /// Build a 207 Multi-Status response with XML body.
@@ -229,19 +192,7 @@ pub fn multistatus_response(xml: Vec<u8>) -> Response {
     Response::builder()
         .status(StatusCode::MULTI_STATUS)
         .header(header::CONTENT_TYPE, "application/xml; charset=utf-8")
-        .header("DAV", "1, 2, 3, calendar-access")
-        .body(Body::from(xml))
-        .unwrap()
-}
-
-/// Build a 207 Multi-Status response that also includes a WWW-Authenticate
-/// header, hinting the client to retry with credentials.
-pub fn multistatus_response_with_auth_challenge(xml: Vec<u8>) -> Response {
-    Response::builder()
-        .status(StatusCode::MULTI_STATUS)
-        .header(header::CONTENT_TYPE, "application/xml; charset=utf-8")
         .header("DAV", "1, 2, 3, calendar-access, calendar-schedule")
-        .header(header::WWW_AUTHENTICATE, "Basic realm=\"CalDAV\"")
         .body(Body::from(xml))
         .unwrap()
 }

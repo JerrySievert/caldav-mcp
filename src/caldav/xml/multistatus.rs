@@ -1,5 +1,5 @@
-use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::Writer;
+use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, BytesText, Event};
 use std::io::{Cursor, Write};
 
 /// Builder for WebDAV multistatus XML responses.
@@ -94,10 +94,7 @@ impl MultistatusBuilder {
                         // Write the entire element as raw XML to avoid
                         // Writer buffer/cursor desync when injecting fragments.
                         let raw = format!("<{prefixed}>{xml}</{prefixed}>");
-                        self.writer
-                            .get_mut()
-                            .write_all(raw.as_bytes())
-                            .unwrap();
+                        self.writer.get_mut().write_all(raw.as_bytes()).unwrap();
                     }
                     PropContent::Empty => {
                         self.writer
@@ -239,11 +236,7 @@ mod tests {
     #[test]
     fn test_response_with_not_found_props() {
         let mut builder = MultistatusBuilder::new();
-        builder.add_response(
-            "/caldav/",
-            vec![],
-            vec!["D:missing-prop".to_string()],
-        );
+        builder.add_response("/caldav/", vec![], vec!["D:missing-prop".to_string()]);
         let xml = String::from_utf8(builder.build()).unwrap();
         assert!(xml.contains("D:missing-prop"));
         assert!(xml.contains("HTTP/1.1 404 Not Found"));
@@ -251,9 +244,18 @@ mod tests {
 
     #[test]
     fn test_prefix_name_mapping() {
-        assert_eq!(prefix_name(super::super::DAV_NS, "displayname"), "D:displayname");
-        assert_eq!(prefix_name(super::super::CALDAV_NS, "calendar-data"), "C:calendar-data");
-        assert_eq!(prefix_name(super::super::APPLE_NS, "calendar-color"), "A:calendar-color");
+        assert_eq!(
+            prefix_name(super::super::DAV_NS, "displayname"),
+            "D:displayname"
+        );
+        assert_eq!(
+            prefix_name(super::super::CALDAV_NS, "calendar-data"),
+            "C:calendar-data"
+        );
+        assert_eq!(
+            prefix_name(super::super::APPLE_NS, "calendar-color"),
+            "A:calendar-color"
+        );
         assert_eq!(prefix_name(super::super::CS_NS, "getctag"), "CS:getctag");
     }
 }

@@ -1,6 +1,6 @@
 use axum::body::Body;
 use axum::extract::State;
-use axum::http::{header, Request, StatusCode};
+use axum::http::{Request, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use sqlx::SqlitePool;
 
@@ -14,13 +14,11 @@ use super::session::SessionManager;
 pub struct McpState {
     pub pool: SqlitePool,
     pub sessions: SessionManager,
+    pub tool_mode: String,
 }
 
 /// Handle POST /mcp — receive JSON-RPC messages from the client.
-pub async fn handle_post(
-    State(state): State<McpState>,
-    request: Request<Body>,
-) -> Response {
+pub async fn handle_post(State(state): State<McpState>, request: Request<Body>) -> Response {
     let user_id = request
         .extensions()
         .get::<McpUserId>()
@@ -53,22 +51,35 @@ pub async fn handle_post(
     // Handle notifications (no id) — return 202 Accepted
     if rpc_request.id.is_none() {
         // Still process the notification
-        handlers::handle_request(&state.pool, &state.sessions, &user_id, &rpc_request).await;
+        handlers::handle_request(
+            &state.pool,
+            &state.sessions,
+            &user_id,
+            &rpc_request,
+            &state.tool_mode,
+        )
+        .await;
         return (StatusCode::ACCEPTED, "").into_response();
     }
 
-    let response =
-        handlers::handle_request(&state.pool, &state.sessions, &user_id, &rpc_request).await;
+    let response = handlers::handle_request(
+        &state.pool,
+        &state.sessions,
+        &user_id,
+        &rpc_request,
+        &state.tool_mode,
+    )
+    .await;
 
     let mut http_response = Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/json");
 
     // Include session ID header if we just created one
-    if rpc_request.method == "initialize" {
-        if let Some(session_id) = state.sessions.get_user_id(&user_id) {
-            http_response = http_response.header("Mcp-Session-Id", session_id);
-        }
+    if rpc_request.method == "initialize"
+        && let Some(session_id) = state.sessions.get_user_id(&user_id)
+    {
+        http_response = http_response.header("Mcp-Session-Id", session_id);
     }
 
     http_response
@@ -90,10 +101,7 @@ pub async fn handle_get() -> Response {
 }
 
 /// Handle DELETE /mcp — terminate a session.
-pub async fn handle_delete(
-    State(state): State<McpState>,
-    request: Request<Body>,
-) -> Response {
+pub async fn handle_delete(State(state): State<McpState>, request: Request<Body>) -> Response {
     if let Some(session_id) = request
         .headers()
         .get("Mcp-Session-Id")

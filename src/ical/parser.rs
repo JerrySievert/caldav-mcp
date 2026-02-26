@@ -58,8 +58,7 @@ pub fn extract_fields(ical_data: &str) -> IcalFields {
 /// Extract a property value, handling parameters (e.g., DTSTART;TZID=...:20260301T090000).
 fn extract_property(line: &str, name: &str) -> Option<String> {
     // Match "NAME:" or "NAME;...:"
-    if line.starts_with(name) {
-        let rest = &line[name.len()..];
+    if let Some(rest) = line.strip_prefix(name) {
         if let Some(stripped) = rest.strip_prefix(':') {
             return Some(stripped.to_string());
         } else if rest.starts_with(';') {
@@ -160,7 +159,9 @@ mod tests {
         let data = "SUMMARY:This is a long\r\n summary that wraps\r\n";
         let lines = unfold_lines(data);
         assert!(
-            lines.iter().any(|l| l == "SUMMARY:This is a longsummary that wraps"),
+            lines
+                .iter()
+                .any(|l| l == "SUMMARY:This is a longsummary that wraps"),
             "Expected unfolded line, got: {:?}",
             lines
         );

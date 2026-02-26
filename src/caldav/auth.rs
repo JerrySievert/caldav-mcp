@@ -1,5 +1,5 @@
 use axum::{
-    http::{header, StatusCode},
+    http::{StatusCode, header},
     response::Response,
 };
 use sqlx::SqlitePool;
@@ -10,11 +10,8 @@ use crate::db::users;
 /// Parse HTTP Basic Auth header and verify credentials.
 async fn parse_basic_auth(pool: &SqlitePool, header: &str) -> Result<Option<User>, ()> {
     let encoded = header.strip_prefix("Basic ").ok_or(())?;
-    let decoded = base64::Engine::decode(
-        &base64::engine::general_purpose::STANDARD,
-        encoded,
-    )
-    .map_err(|_| ())?;
+    let decoded = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, encoded)
+        .map_err(|_| ())?;
     let credentials = String::from_utf8(decoded).map_err(|_| ())?;
     let (username, password) = credentials.split_once(':').ok_or(())?;
 
@@ -40,4 +37,3 @@ pub fn unauthorized_response_fn() -> Response {
 pub async fn try_basic_auth(pool: &SqlitePool, header: &str) -> Option<User> {
     parse_basic_auth(pool, header).await.ok().flatten()
 }
-

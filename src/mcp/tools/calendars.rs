@@ -1,9 +1,10 @@
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sqlx::SqlitePool;
 
 use super::ToolDef;
 use crate::db::calendars as cal_db;
 
+/// Return the MCP tool definitions for calendar management operations.
 pub fn tool_defs() -> Vec<ToolDef> {
     vec![
         ToolDef {
@@ -57,6 +58,7 @@ pub fn tool_defs() -> Vec<ToolDef> {
     ]
 }
 
+/// List all calendars accessible to the authenticated user (owned and shared).
 pub async fn list_calendars(
     pool: &SqlitePool,
     user_id: &str,
@@ -80,17 +82,16 @@ pub async fn list_calendars(
         })
         .collect();
 
-    Ok(json!(result))
+    Ok(json!({ "calendars": result }))
 }
 
+/// Get details about a specific calendar by ID.
 pub async fn get_calendar(
     pool: &SqlitePool,
     _user_id: &str,
     args: &Value,
 ) -> Result<Value, String> {
-    let calendar_id = args["calendar_id"]
-        .as_str()
-        .ok_or("Missing calendar_id")?;
+    let calendar_id = args["calendar_id"].as_str().ok_or("Missing calendar_id")?;
 
     let cal = cal_db::get_calendar_by_id(pool, calendar_id)
         .await
@@ -108,6 +109,7 @@ pub async fn get_calendar(
     }))
 }
 
+/// Create a new calendar for the authenticated user.
 pub async fn create_calendar(
     pool: &SqlitePool,
     user_id: &str,
@@ -131,14 +133,13 @@ pub async fn create_calendar(
     }))
 }
 
+/// Delete a calendar and all its events by ID.
 pub async fn delete_calendar_tool(
     pool: &SqlitePool,
     _user_id: &str,
     args: &Value,
 ) -> Result<Value, String> {
-    let calendar_id = args["calendar_id"]
-        .as_str()
-        .ok_or("Missing calendar_id")?;
+    let calendar_id = args["calendar_id"].as_str().ok_or("Missing calendar_id")?;
 
     cal_db::delete_calendar(pool, calendar_id)
         .await

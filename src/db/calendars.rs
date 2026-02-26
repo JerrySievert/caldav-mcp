@@ -4,9 +4,9 @@ use uuid::Uuid;
 use super::models::Calendar;
 use crate::error::{AppError, AppResult};
 
-/// Generate a new sync token (monotonically increasing UUID v7).
+/// Generate a new sync token as a valid URI (RFC 6578 requires sync-tokens be URIs).
 fn new_sync_token() -> String {
-    format!("sync-{}", Uuid::now_v7())
+    format!("data:,sync-{}", Uuid::now_v7())
 }
 
 /// Create a new calendar for a user. Returns the created calendar.
@@ -38,7 +38,7 @@ pub async fn create_calendar_with_id(
         "INSERT INTO calendars (id, owner_id, name, description, color, timezone, ctag, sync_token)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     )
-    .bind(&id)
+    .bind(id)
     .bind(owner_id)
     .bind(name)
     .bind(description)
@@ -49,7 +49,7 @@ pub async fn create_calendar_with_id(
     .execute(pool)
     .await?;
 
-    get_calendar_by_id(pool, &id)
+    get_calendar_by_id(pool, id)
         .await?
         .ok_or_else(|| AppError::Internal(anyhow::anyhow!("Calendar created but not found")))
 }
@@ -69,20 +69,16 @@ pub async fn list_calendars_for_owner(
     pool: &SqlitePool,
     owner_id: &str,
 ) -> AppResult<Vec<Calendar>> {
-    let cals = sqlx::query_as::<_, Calendar>(
-        "SELECT * FROM calendars WHERE owner_id = ? ORDER BY name",
-    )
-    .bind(owner_id)
-    .fetch_all(pool)
-    .await?;
+    let cals =
+        sqlx::query_as::<_, Calendar>("SELECT * FROM calendars WHERE owner_id = ? ORDER BY name")
+            .bind(owner_id)
+            .fetch_all(pool)
+            .await?;
     Ok(cals)
 }
 
 /// List all calendars accessible to a user (owned + shared with them).
-pub async fn list_calendars_for_user(
-    pool: &SqlitePool,
-    user_id: &str,
-) -> AppResult<Vec<Calendar>> {
+pub async fn list_calendars_for_user(pool: &SqlitePool, user_id: &str) -> AppResult<Vec<Calendar>> {
     let cals = sqlx::query_as::<_, Calendar>(
         "SELECT c.* FROM calendars c WHERE c.owner_id = ?
          UNION
@@ -189,7 +185,7 @@ mod tests {
         assert_eq!(cal.description, "Work events");
         assert_eq!(cal.color, "#FF0000");
         assert_eq!(cal.owner_id, user_id);
-        assert!(cal.ctag.starts_with("sync-"));
+        assert!(cal.ctag.starts_with("data:,sync-"));
 
         let fetched = get_calendar_by_id(&pool, &cal.id).await.unwrap().unwrap();
         assert_eq!(fetched.id, cal.id);

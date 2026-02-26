@@ -42,18 +42,14 @@ pub async fn unshare_calendar(
     calendar_id: &str,
     user_id: &str,
 ) -> AppResult<()> {
-    let result = sqlx::query(
-        "DELETE FROM calendar_shares WHERE calendar_id = ? AND user_id = ?",
-    )
-    .bind(calendar_id)
-    .bind(user_id)
-    .execute(pool)
-    .await?;
+    let result = sqlx::query("DELETE FROM calendar_shares WHERE calendar_id = ? AND user_id = ?")
+        .bind(calendar_id)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
 
     if result.rows_affected() == 0 {
-        return Err(AppError::NotFound(
-            "Share not found".to_string(),
-        ));
+        return Err(AppError::NotFound("Share not found".to_string()));
     }
     Ok(())
 }
@@ -64,12 +60,11 @@ pub async fn list_shares_for_calendar(
     pool: &SqlitePool,
     calendar_id: &str,
 ) -> AppResult<Vec<CalendarShare>> {
-    let shares = sqlx::query_as::<_, CalendarShare>(
-        "SELECT * FROM calendar_shares WHERE calendar_id = ?",
-    )
-    .bind(calendar_id)
-    .fetch_all(pool)
-    .await?;
+    let shares =
+        sqlx::query_as::<_, CalendarShare>("SELECT * FROM calendar_shares WHERE calendar_id = ?")
+            .bind(calendar_id)
+            .fetch_all(pool)
+            .await?;
     Ok(shares)
 }
 
@@ -79,19 +74,18 @@ pub async fn list_shared_calendars(
     user_id: &str,
 ) -> AppResult<Vec<(Calendar, Permission)>> {
     // First get the shares for this user
-    let shares: Vec<CalendarShare> = sqlx::query_as(
-        "SELECT * FROM calendar_shares WHERE user_id = ?",
-    )
-    .bind(user_id)
-    .fetch_all(pool)
-    .await?;
+    let shares: Vec<CalendarShare> =
+        sqlx::query_as("SELECT * FROM calendar_shares WHERE user_id = ?")
+            .bind(user_id)
+            .fetch_all(pool)
+            .await?;
 
     let mut results = Vec::new();
     for share in shares {
-        if let Some(cal) = super::calendars::get_calendar_by_id(pool, &share.calendar_id).await? {
-            if let Some(perm) = Permission::from_str_value(&share.permission) {
-                results.push((cal, perm));
-            }
+        if let Some(cal) = super::calendars::get_calendar_by_id(pool, &share.calendar_id).await?
+            && let Some(perm) = Permission::from_str_value(&share.permission)
+        {
+            results.push((cal, perm));
         }
     }
 
@@ -108,13 +102,12 @@ pub async fn get_user_permission(
     user_id: &str,
 ) -> AppResult<Option<Permission>> {
     // Check if user owns the calendar
-    let is_owner: Option<(String,)> = sqlx::query_as(
-        "SELECT id FROM calendars WHERE id = ? AND owner_id = ?",
-    )
-    .bind(calendar_id)
-    .bind(user_id)
-    .fetch_optional(pool)
-    .await?;
+    let is_owner: Option<(String,)> =
+        sqlx::query_as("SELECT id FROM calendars WHERE id = ? AND owner_id = ?")
+            .bind(calendar_id)
+            .bind(user_id)
+            .fetch_optional(pool)
+            .await?;
 
     if is_owner.is_some() {
         return Ok(Some(Permission::ReadWrite));
@@ -140,8 +133,12 @@ mod tests {
 
     async fn setup() -> (SqlitePool, String, String, String) {
         let pool = db::test_pool().await;
-        let alice = users::create_user(&pool, "alice", None, "pass").await.unwrap();
-        let bob = users::create_user(&pool, "bob", None, "pass").await.unwrap();
+        let alice = users::create_user(&pool, "alice", None, "pass")
+            .await
+            .unwrap();
+        let bob = users::create_user(&pool, "bob", None, "pass")
+            .await
+            .unwrap();
         let cal = calendars::create_calendar(&pool, &alice.id, "Work", "", "#FF0000", "UTC")
             .await
             .unwrap();
@@ -165,8 +162,12 @@ mod tests {
     async fn test_update_share_permission() {
         let (pool, _, bob_id, cal_id) = setup().await;
 
-        share_calendar(&pool, &cal_id, &bob_id, Permission::Read).await.unwrap();
-        let updated = share_calendar(&pool, &cal_id, &bob_id, Permission::ReadWrite).await.unwrap();
+        share_calendar(&pool, &cal_id, &bob_id, Permission::Read)
+            .await
+            .unwrap();
+        let updated = share_calendar(&pool, &cal_id, &bob_id, Permission::ReadWrite)
+            .await
+            .unwrap();
 
         assert_eq!(updated.permission, "read-write");
     }
@@ -175,7 +176,9 @@ mod tests {
     async fn test_unshare_calendar() {
         let (pool, _, bob_id, cal_id) = setup().await;
 
-        share_calendar(&pool, &cal_id, &bob_id, Permission::Read).await.unwrap();
+        share_calendar(&pool, &cal_id, &bob_id, Permission::Read)
+            .await
+            .unwrap();
         unshare_calendar(&pool, &cal_id, &bob_id).await.unwrap();
 
         let shares = list_shares_for_calendar(&pool, &cal_id).await.unwrap();
@@ -194,7 +197,9 @@ mod tests {
     async fn test_owner_has_read_write() {
         let (pool, alice_id, _, cal_id) = setup().await;
 
-        let perm = get_user_permission(&pool, &cal_id, &alice_id).await.unwrap();
+        let perm = get_user_permission(&pool, &cal_id, &alice_id)
+            .await
+            .unwrap();
         assert_eq!(perm, Some(Permission::ReadWrite));
     }
 
@@ -202,7 +207,9 @@ mod tests {
     async fn test_shared_user_permission() {
         let (pool, _, bob_id, cal_id) = setup().await;
 
-        share_calendar(&pool, &cal_id, &bob_id, Permission::Read).await.unwrap();
+        share_calendar(&pool, &cal_id, &bob_id, Permission::Read)
+            .await
+            .unwrap();
         let perm = get_user_permission(&pool, &cal_id, &bob_id).await.unwrap();
         assert_eq!(perm, Some(Permission::Read));
     }
@@ -220,7 +227,9 @@ mod tests {
         let (pool, alice_id, bob_id, cal_id) = setup().await;
 
         // Share alice's calendar with bob
-        share_calendar(&pool, &cal_id, &bob_id, Permission::Read).await.unwrap();
+        share_calendar(&pool, &cal_id, &bob_id, Permission::Read)
+            .await
+            .unwrap();
 
         // Bob's shared calendars should include alice's
         let shared = list_shared_calendars(&pool, &bob_id).await.unwrap();
@@ -237,9 +246,13 @@ mod tests {
     async fn test_shared_calendars_appear_in_list_for_user() {
         let (pool, _, bob_id, cal_id) = setup().await;
 
-        share_calendar(&pool, &cal_id, &bob_id, Permission::Read).await.unwrap();
+        share_calendar(&pool, &cal_id, &bob_id, Permission::Read)
+            .await
+            .unwrap();
 
-        let all_cals = calendars::list_calendars_for_user(&pool, &bob_id).await.unwrap();
+        let all_cals = calendars::list_calendars_for_user(&pool, &bob_id)
+            .await
+            .unwrap();
         assert_eq!(all_cals.len(), 1);
         assert_eq!(all_cals[0].id, cal_id);
     }

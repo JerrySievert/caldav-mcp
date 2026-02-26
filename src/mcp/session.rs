@@ -9,6 +9,7 @@ pub struct SessionManager {
 }
 
 impl SessionManager {
+    /// Create a new empty session manager.
     pub fn new() -> Self {
         Self {
             sessions: Arc::new(Mutex::new(HashMap::new())),

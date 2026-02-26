@@ -4,8 +4,8 @@ use axum::http::{Request, StatusCode};
 use axum::response::{IntoResponse, Response};
 use sqlx::SqlitePool;
 
-use crate::db::models::User;
 use crate::db::calendars;
+use crate::db::models::User;
 
 /// Handle MKCALENDAR request to create a new calendar.
 /// Path: /caldav/users/{username}/{calendar_id}/
@@ -18,7 +18,11 @@ pub async fn handle_mkcalendar(
 
     // Only the authenticated user can create calendars in their own space
     if user.username != username {
-        return (StatusCode::FORBIDDEN, "Cannot create calendars for another user").into_response();
+        return (
+            StatusCode::FORBIDDEN,
+            "Cannot create calendars for another user",
+        )
+            .into_response();
     }
 
     // Check if calendar already exists
@@ -34,11 +38,25 @@ pub async fn handle_mkcalendar(
     let name = extract_displayname(&body).unwrap_or_else(|| calendar_id.clone());
     let color = extract_calendar_color(&body).unwrap_or_else(|| "#0E61B9".to_string());
 
-    match calendars::create_calendar_with_id(&pool, &calendar_id, &user.id, &name, "", &color, "UTC").await {
+    match calendars::create_calendar_with_id(
+        &pool,
+        &calendar_id,
+        &user.id,
+        &name,
+        "",
+        &color,
+        "UTC",
+    )
+    .await
+    {
         Ok(_cal) => (StatusCode::CREATED, "Calendar created").into_response(),
         Err(e) => {
             tracing::error!("Failed to create calendar: {e}");
-            (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create calendar").into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to create calendar",
+            )
+                .into_response()
         }
     }
 }

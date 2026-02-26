@@ -1,6 +1,6 @@
 use axum::{
     extract::{Request, State},
-    http::{header, StatusCode},
+    http::{StatusCode, header},
     middleware::Next,
     response::Response,
 };
@@ -43,10 +43,7 @@ pub struct McpUserId(pub String);
 fn unauthorized_response(msg: &str) -> Response {
     Response::builder()
         .status(StatusCode::UNAUTHORIZED)
-        .header(
-            header::WWW_AUTHENTICATE,
-            "Bearer realm=\"CalDAV MCP\"",
-        )
+        .header(header::WWW_AUTHENTICATE, "Bearer realm=\"CalDAV MCP\"")
         .body(axum::body::Body::from(msg.to_string()))
         .unwrap()
 }

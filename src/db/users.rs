@@ -1,6 +1,6 @@
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
 };
 use sqlx::SqlitePool;
 use uuid::Uuid;
@@ -18,21 +18,19 @@ pub async fn create_user(
     let id = Uuid::now_v7().to_string();
     let password_hash = hash_password(password)?;
 
-    sqlx::query(
-        "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)",
-    )
-    .bind(&id)
-    .bind(username)
-    .bind(email)
-    .bind(&password_hash)
-    .execute(pool)
-    .await
-    .map_err(|e| match e {
-        sqlx::Error::Database(ref db_err) if db_err.message().contains("UNIQUE") => {
-            AppError::Conflict(format!("User '{username}' already exists"))
-        }
-        _ => AppError::Database(e),
-    })?;
+    sqlx::query("INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)")
+        .bind(&id)
+        .bind(username)
+        .bind(email)
+        .bind(&password_hash)
+        .execute(pool)
+        .await
+        .map_err(|e| match e {
+            sqlx::Error::Database(ref db_err) if db_err.message().contains("UNIQUE") => {
+                AppError::Conflict(format!("User '{username}' already exists"))
+            }
+            _ => AppError::Database(e),
+        })?;
 
     get_user_by_username(pool, username)
         .await?
@@ -40,10 +38,7 @@ pub async fn create_user(
 }
 
 /// Look up a user by username.
-pub async fn get_user_by_username(
-    pool: &SqlitePool,
-    username: &str,
-) -> AppResult<Option<User>> {
+pub async fn get_user_by_username(pool: &SqlitePool, username: &str) -> AppResult<Option<User>> {
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = ?")
         .bind(username)
         .fetch_optional(pool)
@@ -169,7 +164,9 @@ mod tests {
     async fn test_verify_correct_password() {
         let pool = db::test_pool().await;
 
-        create_user(&pool, "alice", None, "secret123").await.unwrap();
+        create_user(&pool, "alice", None, "secret123")
+            .await
+            .unwrap();
         let user = verify_user(&pool, "alice", "secret123").await.unwrap();
 
         assert!(user.is_some());
@@ -180,7 +177,9 @@ mod tests {
     async fn test_verify_wrong_password() {
         let pool = db::test_pool().await;
 
-        create_user(&pool, "alice", None, "secret123").await.unwrap();
+        create_user(&pool, "alice", None, "secret123")
+            .await
+            .unwrap();
         let user = verify_user(&pool, "alice", "wrong").await.unwrap();
 
         assert!(user.is_none());

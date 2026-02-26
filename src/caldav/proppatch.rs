@@ -1,10 +1,12 @@
 use axum::body::Body;
 use axum::extract::{Path, State};
-use axum::http::{header, Request, StatusCode};
+use axum::http::{Request, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use sqlx::SqlitePool;
 
+use super::HrefContext;
 use super::xml::multistatus::{MultistatusBuilder, PropContent, PropValue};
+use super::xml::properties::calendar_href_for_context;
 use super::xml::{APPLE_NS, CALDAV_NS, DAV_NS};
 use crate::db::calendars;
 use crate::db::models::User;
@@ -17,6 +19,7 @@ pub async fn handle_proppatch(
     request: Request<Body>,
 ) -> Response {
     let user = request.extensions().get::<User>().unwrap().clone();
+    let href_ctx = request.extensions().get::<HrefContext>().cloned();
     let body = axum::body::to_bytes(request.into_body(), 64 * 1024)
         .await
         .unwrap_or_default();
@@ -45,7 +48,11 @@ pub async fn handle_proppatch(
     .await
     {
         Ok(_) => {
-            let href = format!("/caldav/users/{}/{}/", user.username, calendar.id);
+            let href = match &href_ctx {
+                Some(ctx) => calendar_href_for_context(ctx, &calendar.id),
+                None => format!("/caldav/users/{}/{}/", user.username, calendar.id),
+            };
+            tracing::info!("PROPPATCH response href={href}");
             let mut builder = MultistatusBuilder::new();
 
             let mut found = Vec::new();
@@ -81,7 +88,11 @@ pub async fn handle_proppatch(
         }
         Err(e) => {
             tracing::error!("Failed to update calendar properties: {e}");
-            (StatusCode::INTERNAL_SERVER_ERROR, "Failed to update properties").into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to update properties",
+            )
+                .into_response()
         }
     }
 }

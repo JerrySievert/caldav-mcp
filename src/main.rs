@@ -119,7 +119,8 @@ async fn run_server() -> anyhow::Result<()> {
     tracing::info!("Database initialized");
 
     let caldav_app = caldav::router(pool.clone());
-    let mcp_app = mcp::router(pool.clone());
+    tracing::info!(tool_mode = %config.tool_mode, "MCP tool mode");
+    let mcp_app = mcp::router(pool.clone(), config.tool_mode.clone());
 
     let caldav_addr = SocketAddr::from(([0, 0, 0, 0], config.caldav_port));
     let caldav_listener = TcpListener::bind(caldav_addr).await?;
@@ -180,17 +181,16 @@ async fn cmd_create_token(username: &str, name: &str) -> anyhow::Result<()> {
 /// List all users.
 async fn cmd_list_users() -> anyhow::Result<()> {
     let pool = cli_pool().await?;
-    let users =
-        sqlx::query_as::<_, db::models::User>("SELECT * FROM users ORDER BY username")
-            .fetch_all(&pool)
-            .await?;
+    let users = sqlx::query_as::<_, db::models::User>("SELECT * FROM users ORDER BY username")
+        .fetch_all(&pool)
+        .await?;
 
     if users.is_empty() {
         println!("No users found.");
         return Ok(());
     }
 
-    println!("{:<38} {:<20} {}", "ID", "Username", "Email");
+    println!("{:<38} {:<20} Email", "ID", "Username");
     println!("{}", "-".repeat(70));
     for u in &users {
         println!(
@@ -216,7 +216,7 @@ async fn cmd_list_tokens(username: &str) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    println!("{:<38} {:<20} {}", "ID", "Name", "Created");
+    println!("{:<38} {:<20} Created", "ID", "Name");
     println!("{}", "-".repeat(70));
     for t in &tokens {
         println!("{:<38} {:<20} {}", t.id, t.name, t.created_at);

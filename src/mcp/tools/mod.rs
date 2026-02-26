@@ -1,6 +1,7 @@
 pub mod calendars;
 pub mod events;
 pub mod sharing;
+pub mod simple;
 
 use serde_json::Value;
 use sqlx::SqlitePool;
@@ -12,8 +13,11 @@ pub struct ToolDef {
     pub input_schema: Value,
 }
 
-/// Get all registered MCP tool definitions.
-pub fn all_tools() -> Vec<ToolDef> {
+/// Get all registered MCP tool definitions for the given mode.
+pub fn all_tools(tool_mode: &str) -> Vec<ToolDef> {
+    if tool_mode == "simple" {
+        return simple::tool_defs();
+    }
     let mut tools = Vec::new();
     tools.extend(calendars::tool_defs());
     tools.extend(events::tool_defs());
@@ -27,7 +31,11 @@ pub async fn dispatch(
     user_id: &str,
     tool_name: &str,
     arguments: &Value,
+    tool_mode: &str,
 ) -> Result<Value, String> {
+    if tool_mode == "simple" {
+        return simple::dispatch(pool, user_id, tool_name, arguments).await;
+    }
     match tool_name {
         "list_calendars" => calendars::list_calendars(pool, user_id, arguments).await,
         "get_calendar" => calendars::get_calendar(pool, user_id, arguments).await,

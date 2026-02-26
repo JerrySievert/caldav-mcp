@@ -1,0 +1,8 @@
+target/
+data/
+.env
+.git/
+.claude/
+*.md
+docs/
+skills/

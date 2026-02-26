@@ -1,0 +1,21 @@
+services:
+  caldav:
+    image: caldav-server:latest
+    container_name: caldav-server
+    ports:
+      - "${CALDAV_PORT:-5232}:5232"
+      - "${MCP_PORT:-5233}:5233"
+    environment:
+      TZ: "${TZ:-America/Los_Angeles}"
+    volumes:
+      # Mount host data/ directory for SQLite persistence
+      - ./data:/data
+      # Mount host .env file if it exists
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -o /dev/null http://localhost:5232/.well-known/caldav || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

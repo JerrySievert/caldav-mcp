@@ -82,6 +82,7 @@ pub enum Permission {
 }
 
 impl Permission {
+    /// Return the wire-format string for this permission level (`"read"` or `"read-write"`).
     pub fn as_str(&self) -> &'static str {
         match self {
             Permission::Read => "read",
@@ -89,6 +90,7 @@ impl Permission {
         }
     }
 
+    /// Parse a permission from its wire-format string. Returns `None` for unknown values.
     pub fn from_str_value(s: &str) -> Option<Self> {
         match s {
             "read" => Some(Permission::Read),
@@ -101,5 +103,47 @@ impl Permission {
     #[allow(dead_code)]
     pub fn can_write(&self) -> bool {
         matches!(self, Permission::ReadWrite)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_permission_as_str() {
+        assert_eq!(Permission::Read.as_str(), "read");
+        assert_eq!(Permission::ReadWrite.as_str(), "read-write");
+    }
+
+    #[test]
+    fn test_permission_from_str_value() {
+        assert_eq!(Permission::from_str_value("read"), Some(Permission::Read));
+        assert_eq!(
+            Permission::from_str_value("read-write"),
+            Some(Permission::ReadWrite)
+        );
+        assert_eq!(Permission::from_str_value("write"), None);
+        assert_eq!(Permission::from_str_value(""), None);
+    }
+
+    #[test]
+    fn test_permission_can_write() {
+        assert!(!Permission::Read.can_write());
+        assert!(Permission::ReadWrite.can_write());
+    }
+
+    #[test]
+    fn test_permission_equality() {
+        assert_eq!(Permission::Read, Permission::Read);
+        assert_eq!(Permission::ReadWrite, Permission::ReadWrite);
+        assert_ne!(Permission::Read, Permission::ReadWrite);
+    }
+
+    #[test]
+    fn test_permission_clone_copy() {
+        let p = Permission::ReadWrite;
+        let q = p;
+        assert_eq!(p, q);
     }
 }

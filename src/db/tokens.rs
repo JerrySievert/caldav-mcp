@@ -1,6 +1,6 @@
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
 };
 use base64::Engine;
 use rand::RngCore;
@@ -21,15 +21,13 @@ pub async fn create_token(
     let raw_token = generate_raw_token();
     let token_hash = hash_token(&raw_token)?;
 
-    sqlx::query(
-        "INSERT INTO mcp_tokens (id, user_id, token_hash, name) VALUES (?, ?, ?, ?)",
-    )
-    .bind(&id)
-    .bind(user_id)
-    .bind(&token_hash)
-    .bind(name)
-    .execute(pool)
-    .await?;
+    sqlx::query("INSERT INTO mcp_tokens (id, user_id, token_hash, name) VALUES (?, ?, ?, ?)")
+        .bind(&id)
+        .bind(user_id)
+        .bind(&token_hash)
+        .bind(name)
+        .execute(pool)
+        .await?;
 
     let record = sqlx::query_as::<_, McpToken>("SELECT * FROM mcp_tokens WHERE id = ?")
         .bind(&id)
@@ -70,10 +68,7 @@ pub async fn delete_token(pool: &SqlitePool, token_id: &str) -> AppResult<()> {
 }
 
 /// List all tokens for a user (without raw values).
-pub async fn list_tokens_for_user(
-    pool: &SqlitePool,
-    user_id: &str,
-) -> AppResult<Vec<McpToken>> {
+pub async fn list_tokens_for_user(pool: &SqlitePool, user_id: &str) -> AppResult<Vec<McpToken>> {
     let tokens = sqlx::query_as::<_, McpToken>(
         "SELECT * FROM mcp_tokens WHERE user_id = ? ORDER BY created_at",
     )
@@ -130,9 +125,7 @@ mod tests {
     async fn test_create_and_validate_token() {
         let (pool, user_id) = setup().await;
 
-        let (raw_token, record) = create_token(&pool, &user_id, "test-token")
-            .await
-            .unwrap();
+        let (raw_token, record) = create_token(&pool, &user_id, "test-token").await.unwrap();
 
         assert!(raw_token.starts_with("mcp_"));
         assert_eq!(record.name, "test-token");

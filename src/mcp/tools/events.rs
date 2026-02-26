@@ -1,10 +1,11 @@
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sqlx::SqlitePool;
 
 use super::ToolDef;
 use crate::db::events as event_db;
 use crate::ical::builder;
 
+/// Return the MCP tool definitions for calendar event CRUD and query operations.
 pub fn tool_defs() -> Vec<ToolDef> {
     vec![
         ToolDef {
@@ -15,8 +16,9 @@ pub fn tool_defs() -> Vec<ToolDef> {
                 "properties": {
                     "calendar_id": {"type": "string", "description": "The target calendar ID"},
                     "title": {"type": "string", "description": "Event title/summary"},
-                    "start": {"type": "string", "description": "Start time (ISO 8601 or iCal format, e.g. 20260301T090000Z)"},
-                    "end": {"type": "string", "description": "End time (ISO 8601 or iCal format)"},
+                    "start": {"type": "string", "description": "Local start time in iCal format, e.g. 20260301T090000 (no Z when timezone provided)"},
+                    "end": {"type": "string", "description": "Local end time in iCal format"},
+                    "timezone": {"type": "string", "description": "IANA timezone, e.g. America/Los_Angeles. Omit only for explicit UTC times (Z suffix)."},
                     "description": {"type": "string", "description": "Event description"},
                     "location": {"type": "string", "description": "Event location"}
                 },
@@ -46,8 +48,9 @@ pub fn tool_defs() -> Vec<ToolDef> {
                     "calendar_id": {"type": "string", "description": "The calendar ID"},
                     "event_uid": {"type": "string", "description": "The event UID to update"},
                     "title": {"type": "string", "description": "New event title"},
-                    "start": {"type": "string", "description": "New start time"},
-                    "end": {"type": "string", "description": "New end time"},
+                    "start": {"type": "string", "description": "New local start time in iCal format"},
+                    "end": {"type": "string", "description": "New local end time in iCal format"},
+                    "timezone": {"type": "string", "description": "IANA timezone, e.g. America/Los_Angeles"},
                     "description": {"type": "string", "description": "New description"},
                     "location": {"type": "string", "description": "New location"}
                 },
@@ -86,6 +89,7 @@ pub fn tool_defs() -> Vec<ToolDef> {
     ]
 }
 
+/// Create a new calendar event in the specified calendar.
 pub async fn create_event(
     pool: &SqlitePool,
     _user_id: &str,
@@ -97,19 +101,22 @@ pub async fn create_event(
     let end = args["end"].as_str().ok_or("Missing end")?;
     let description = args["description"].as_str();
     let location = args["location"].as_str();
+    let timezone = args["timezone"].as_str();
 
     let uid = builder::generate_uid();
-    let ical_data = builder::build_vevent(&uid, title, start, end, description, location);
+    let ical_data = builder::build_vevent(&uid, title, start, end, description, location, timezone);
 
     let (obj, _) = event_db::upsert_object(
         pool,
         calendar_id,
         &uid,
         &ical_data,
-        "VEVENT",
-        Some(start),
-        Some(end),
-        Some(title),
+        event_db::ObjectFields {
+            component_type: "VEVENT",
+            dtstart: Some(start),
+            dtend: Some(end),
+            summary: Some(title),
+        },
     )
     .await
     .map_err(|e| format!("Failed to create event: {e}"))?;
@@ -124,11 +131,8 @@ pub async fn create_event(
     }))
 }
 
-pub async fn get_event(
-    pool: &SqlitePool,
-    _user_id: &str,
-    args: &Value,
-) -> Result<Value, String> {
+/// Get a specific calendar event by its UID.
+pub async fn get_event(pool: &SqlitePool, _user_id: &str, args: &Value) -> Result<Value, String> {
     let calendar_id = args["calendar_id"].as_str().ok_or("Missing calendar_id")?;
     let event_uid = args["event_uid"].as_str().ok_or("Missing event_uid")?;
 
@@ -148,6 +152,7 @@ pub async fn get_event(
     }))
 }
 
+/// Update an existing calendar event, replacing all fields.
 pub async fn update_event(
     pool: &SqlitePool,
     _user_id: &str,
@@ -160,6 +165,7 @@ pub async fn update_event(
     let end = args["end"].as_str().ok_or("Missing end")?;
     let description = args["description"].as_str();
     let location = args["location"].as_str();
+    let timezone = args["timezone"].as_str();
 
     // Verify the event exists
     event_db::get_object_by_uid(pool, calendar_id, event_uid)
@@ -167,17 +173,27 @@ pub async fn update_event(
         .map_err(|e| format!("Database error: {e}"))?
         .ok_or("Event not found")?;
 
-    let ical_data = builder::build_vevent(event_uid, title, start, end, description, location);
+    let ical_data = builder::build_vevent(
+        event_uid,
+        title,
+        start,
+        end,
+        description,
+        location,
+        timezone,
+    );
 
     let (obj, _) = event_db::upsert_object(
         pool,
         calendar_id,
         event_uid,
         &ical_data,
-        "VEVENT",
-        Some(start),
-        Some(end),
-        Some(title),
+        event_db::ObjectFields {
+            component_type: "VEVENT",
+            dtstart: Some(start),
+            dtend: Some(end),
+            summary: Some(title),
+        },
     )
     .await
     .map_err(|e| format!("Failed to update event: {e}"))?;
@@ -191,6 +207,7 @@ pub async fn update_event(
     }))
 }
 
+/// Delete a calendar event by UID.
 pub async fn delete_event(
     pool: &SqlitePool,
     _user_id: &str,
@@ -206,6 +223,7 @@ pub async fn delete_event(
     Ok(json!({"deleted": true, "event_uid": event_uid}))
 }
 
+/// Query events in a calendar, with an optional time-range filter.
 pub async fn query_events(
     pool: &SqlitePool,
     _user_id: &str,

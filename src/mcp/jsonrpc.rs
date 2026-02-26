@@ -38,6 +38,7 @@ pub struct JsonRpcError {
 }
 
 impl JsonRpcResponse {
+    /// Construct a JSON-RPC 2.0 success response with the given request id and result value.
     pub fn success(id: Option<Value>, result: Value) -> Self {
         Self {
             jsonrpc: "2.0".to_string(),
@@ -48,6 +49,7 @@ impl JsonRpcResponse {
 }
 
 impl JsonRpcErrorResponse {
+    /// Construct a JSON-RPC 2.0 error response with the given id, numeric error code, and message.
     pub fn error(id: Option<Value>, code: i32, message: impl Into<String>) -> Self {
         Self {
             jsonrpc: "2.0".to_string(),
@@ -59,14 +61,17 @@ impl JsonRpcErrorResponse {
         }
     }
 
+    /// Construct a -32601 Method Not Found error response.
     pub fn method_not_found(id: Option<Value>) -> Self {
         Self::error(id, -32601, "Method not found")
     }
 
+    /// Construct a -32602 Invalid Params error response with a descriptive message.
     pub fn invalid_params(id: Option<Value>, msg: impl Into<String>) -> Self {
         Self::error(id, -32602, msg)
     }
 
+    /// Construct a -32603 Internal Error response with a descriptive message.
     #[allow(dead_code)]
     pub fn internal_error(id: Option<Value>, msg: impl Into<String>) -> Self {
         Self::error(id, -32603, msg)
@@ -106,7 +111,8 @@ mod tests {
 
     #[test]
     fn test_serialize_response() {
-        let resp = JsonRpcResponse::success(Some(serde_json::json!(1)), serde_json::json!({"tools": []}));
+        let resp =
+            JsonRpcResponse::success(Some(serde_json::json!(1)), serde_json::json!({"tools": []}));
         let json = serde_json::to_string(&resp).unwrap();
         assert!(json.contains("\"jsonrpc\":\"2.0\""));
         assert!(json.contains("\"id\":1"));

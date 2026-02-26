@@ -4,6 +4,27 @@ use axum::http::{Request, StatusCode};
 use axum::response::{IntoResponse, Response};
 use sqlx::SqlitePool;
 
+/// Percent-decode a URL path segment (e.g. `%40` → `@`).
+fn percent_decode(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '%' {
+            let h1 = chars.next();
+            let h2 = chars.next();
+            if let (Some(h1), Some(h2)) = (h1, h2)
+                && let Ok(byte) = u8::from_str_radix(&format!("{h1}{h2}"), 16)
+            {
+                out.push(byte as char);
+                continue;
+            }
+        }
+        out.push(c);
+    }
+    out
+}
+
+use super::HrefContext;
 use super::propfind::multistatus_response;
 use super::xml::multistatus::MultistatusBuilder;
 use super::xml::{parse, properties};
@@ -11,54 +32,87 @@ use crate::db::models::User;
 use crate::db::{calendars, events};
 
 /// Handle REPORT for a calendar collection: /caldav/users/{username}/{calendar_id}/
+/// or /calendar/dav/{email}/user/{calendar_id}/
 pub async fn handle_report(
     State(pool): State<SqlitePool>,
     Path((_username, calendar_id)): Path<(String, String)>,
     request: Request<Body>,
 ) -> Response {
     let user = request.extensions().get::<User>().unwrap().clone();
+    let href_ctx = request.extensions().get::<HrefContext>().cloned();
     let body = axum::body::to_bytes(request.into_body(), 256 * 1024)
         .await
         .unwrap_or_default();
 
+    let ctx = href_ctx.unwrap_or(HrefContext {
+        email: None,
+        username: user.username.clone(),
+    });
+
+    let body_str = String::from_utf8_lossy(&body).to_string();
     let report = match parse::parse_report(&body) {
         Some(r) => r,
         None => {
+            tracing::warn!(calendar_id = %calendar_id, body = %body_str, "REPORT: failed to parse body");
             return (StatusCode::BAD_REQUEST, "Invalid REPORT body").into_response();
         }
     };
 
-    match report {
-        parse::ReportRequest::CalendarMultiget { props, hrefs } => {
-            handle_multiget(&pool, &user, &calendar_id, &props, &hrefs).await
+    let resp = match report {
+        parse::ReportRequest::CalendarMultiget {
+            ref props,
+            ref hrefs,
+        } => {
+            tracing::info!(calendar_id = %calendar_id, hrefs = ?hrefs, "REPORT: calendar-multiget");
+            handle_multiget(&pool, &ctx, &calendar_id, props, hrefs).await
         }
-        parse::ReportRequest::CalendarQuery { props, time_range } => {
-            handle_query(&pool, &user, &calendar_id, &props, time_range.as_ref()).await
+        parse::ReportRequest::CalendarQuery {
+            ref props,
+            ref time_range,
+        } => {
+            tracing::info!(calendar_id = %calendar_id, time_range = ?time_range, "REPORT: calendar-query");
+            handle_query(&pool, &ctx, &calendar_id, props, time_range.as_ref()).await
         }
-        parse::ReportRequest::SyncCollection { props, sync_token } => {
-            handle_sync(&pool, &user, &calendar_id, &props, &sync_token).await
+        parse::ReportRequest::SyncCollection {
+            ref props,
+            ref sync_token,
+        } => {
+            tracing::info!(calendar_id = %calendar_id, sync_token = %sync_token, "REPORT: sync-collection");
+            handle_sync(&pool, &ctx, &calendar_id, props, sync_token).await
         }
-    }
+    };
+
+    let (parts, resp_body) = resp.into_parts();
+    let resp_bytes = axum::body::to_bytes(resp_body, 512 * 1024)
+        .await
+        .unwrap_or_default();
+    tracing::info!(
+        calendar_id = %calendar_id,
+        status = %parts.status,
+        response_body = %String::from_utf8_lossy(&resp_bytes),
+        "REPORT: response"
+    );
+    Response::from_parts(parts, Body::from(resp_bytes))
 }
 
 /// Handle calendar-multiget REPORT: fetch specific events by href.
 async fn handle_multiget(
     pool: &SqlitePool,
-    user: &User,
+    ctx: &HrefContext,
     calendar_id: &str,
     _props: &[parse::PropRequest],
     hrefs: &[String],
 ) -> Response {
     let mut builder = MultistatusBuilder::new();
 
-    // Extract UIDs from hrefs
+    // Extract UIDs from hrefs, percent-decoding the filename component
     let uids: Vec<String> = hrefs
         .iter()
         .filter_map(|href| {
             href.rsplit('/')
                 .next()
                 .and_then(|f| f.strip_suffix(".ics"))
-                .map(|s| s.to_string())
+                .map(percent_decode)
         })
         .collect();
 
@@ -67,10 +121,10 @@ async fn handle_multiget(
         .unwrap_or_default();
 
     for obj in &objects {
-        let href = properties::calendar_object_href(&user.username, calendar_id, &obj.uid);
+        let href = properties::calendar_object_href_for_context(ctx, calendar_id, &obj.uid);
         builder.add_response(
             &href,
-            properties::calendar_object_props(&user.username, calendar_id, obj, true),
+            properties::calendar_object_props(&ctx.username, calendar_id, obj, true),
             vec![],
         );
     }
@@ -81,7 +135,7 @@ async fn handle_multiget(
 /// Handle calendar-query REPORT: fetch events matching a filter (time-range).
 async fn handle_query(
     pool: &SqlitePool,
-    user: &User,
+    ctx: &HrefContext,
     calendar_id: &str,
     _props: &[parse::PropRequest],
     time_range: Option<&(String, String)>,
@@ -98,10 +152,10 @@ async fn handle_query(
     };
 
     for obj in &objects {
-        let href = properties::calendar_object_href(&user.username, calendar_id, &obj.uid);
+        let href = properties::calendar_object_href_for_context(ctx, calendar_id, &obj.uid);
         builder.add_response(
             &href,
-            properties::calendar_object_props(&user.username, calendar_id, obj, true),
+            properties::calendar_object_props(&ctx.username, calendar_id, obj, true),
             vec![],
         );
     }
@@ -112,9 +166,9 @@ async fn handle_query(
 /// Handle sync-collection REPORT (RFC 6578): return changes since a sync token.
 async fn handle_sync(
     pool: &SqlitePool,
-    user: &User,
+    ctx: &HrefContext,
     calendar_id: &str,
-    _props: &[parse::PropRequest],
+    props: &[parse::PropRequest],
     sync_token: &str,
 ) -> Response {
     let calendar = match calendars::get_calendar_by_id(pool, calendar_id).await {
@@ -123,6 +177,9 @@ async fn handle_sync(
             return (StatusCode::NOT_FOUND, "Calendar not found").into_response();
         }
     };
+
+    // Include calendar-data if the client requested it
+    let include_data = props.iter().any(|p| p.local_name == "calendar-data");
 
     let mut builder = MultistatusBuilder::new();
 
@@ -133,10 +190,10 @@ async fn handle_sync(
             .unwrap_or_default();
 
         for obj in &objects {
-            let href = properties::calendar_object_href(&user.username, calendar_id, &obj.uid);
+            let href = properties::calendar_object_href_for_context(ctx, calendar_id, &obj.uid);
             builder.add_response(
                 &href,
-                properties::calendar_object_props(&user.username, calendar_id, obj, false),
+                properties::calendar_object_props(&ctx.username, calendar_id, obj, include_data),
                 vec![],
             );
         }
@@ -148,7 +205,7 @@ async fn handle_sync(
 
         for change in &changes {
             let href =
-                properties::calendar_object_href(&user.username, calendar_id, &change.object_uid);
+                properties::calendar_object_href_for_context(ctx, calendar_id, &change.object_uid);
 
             if change.change_type == "deleted" {
                 // For deletions, return a 404 status for that href
@@ -161,10 +218,10 @@ async fn handle_sync(
                     builder.add_response(
                         &href,
                         properties::calendar_object_props(
-                            &user.username,
+                            &ctx.username,
                             calendar_id,
                             &obj,
-                            false,
+                            include_data,
                         ),
                         vec![],
                     );
@@ -173,8 +230,9 @@ async fn handle_sync(
         }
     }
 
-    // Include the current sync token
-    builder.add_sync_token(&calendar.sync_token);
+    // Include the current sync token (must be a valid URI per RFC 6578)
+    let token_uri = properties::ensure_sync_token_uri(&calendar.sync_token);
+    builder.add_sync_token(&token_uri);
 
     multistatus_response(builder.build())
 }

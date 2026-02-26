@@ -6,6 +6,8 @@ pub struct Config {
     pub caldav_port: u16,
     pub mcp_port: u16,
     pub database_url: String,
+    /// MCP tool mode: "full" (12 tools) or "simple" (4 tools for local LLMs).
+    pub tool_mode: String,
 }
 
 impl Config {
@@ -22,6 +24,7 @@ impl Config {
                 .expect("MCP_PORT must be a valid port number"),
             database_url: env::var("DATABASE_URL")
                 .unwrap_or_else(|_| "sqlite:data/caldav.db?mode=rwc".to_string()),
+            tool_mode: env::var("MCP_TOOL_MODE").unwrap_or_else(|_| "full".to_string()),
         })
     }
 }
@@ -39,5 +42,18 @@ mod tests {
         assert!(config.caldav_port > 0);
         assert!(config.mcp_port > 0);
         assert!(!config.database_url.is_empty());
+        assert!(
+            config.tool_mode == "full" || config.tool_mode == "simple",
+            "tool_mode should default to 'full'"
+        );
+    }
+
+    #[test]
+    fn test_tool_mode_defaults_to_full() {
+        // Clear the env var so default kicks in
+        // SAFETY: test runs single-threaded for env manipulation
+        unsafe { std::env::remove_var("MCP_TOOL_MODE") };
+        let config = Config::from_env().unwrap();
+        assert_eq!(config.tool_mode, "full");
     }
 }

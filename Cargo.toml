@@ -3,6 +3,7 @@ name = "caldav-server"
 version = "0.1.0"
 edition = "2024"
 description = "A CalDAV server with MCP interface, written in Rust"
+license = "BSD-3-Clause"
 
 [dependencies]
 # Web framework and async runtime

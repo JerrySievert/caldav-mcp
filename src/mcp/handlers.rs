@@ -1,4 +1,4 @@
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sqlx::SqlitePool;
 
 use super::jsonrpc::{JsonRpcErrorResponse, JsonRpcRequest, JsonRpcResponse};
@@ -11,15 +11,16 @@ pub async fn handle_request(
     sessions: &SessionManager,
     user_id: &str,
     request: &JsonRpcRequest,
+    tool_mode: &str,
 ) -> Value {
     match request.method.as_str() {
-        "initialize" => handle_initialize(sessions, user_id, request),
+        "initialize" => handle_initialize(sessions, user_id, request, tool_mode),
         "notifications/initialized" => {
             // Notification — no response needed
             Value::Null
         }
-        "tools/list" => handle_tools_list(request),
-        "tools/call" => handle_tools_call(pool, user_id, request).await,
+        "tools/list" => handle_tools_list(request, tool_mode),
+        "tools/call" => handle_tools_call(pool, user_id, request, tool_mode).await,
         "ping" => {
             serde_json::to_value(JsonRpcResponse::success(request.id.clone(), json!({}))).unwrap()
         }
@@ -33,8 +34,15 @@ fn handle_initialize(
     sessions: &SessionManager,
     user_id: &str,
     request: &JsonRpcRequest,
+    tool_mode: &str,
 ) -> Value {
     let _session_id = sessions.create_session(user_id);
+
+    let instructions = if tool_mode == "simple" {
+        "Calendar server. Tools: add_event (create event), delete_event (remove event), list_events (show events, optional time range filter)."
+    } else {
+        "This MCP server provides tools to manage CalDAV calendars and events. Use list_calendars to see available calendars, then create_event, query_events, etc. to manage events."
+    };
 
     let result = json!({
         "protocolVersion": "2025-03-26",
@@ -47,15 +55,15 @@ fn handle_initialize(
             "name": "caldav-mcp-server",
             "version": env!("CARGO_PKG_VERSION")
         },
-        "instructions": "This MCP server provides tools to manage CalDAV calendars and events. Use list_calendars to see available calendars, then create_event, query_events, etc. to manage events."
+        "instructions": instructions
     });
 
     serde_json::to_value(JsonRpcResponse::success(request.id.clone(), result)).unwrap()
 }
 
 /// Handle tools/list — return all tool definitions.
-fn handle_tools_list(request: &JsonRpcRequest) -> Value {
-    let tool_defs = tools::all_tools();
+fn handle_tools_list(request: &JsonRpcRequest, tool_mode: &str) -> Value {
+    let tool_defs = tools::all_tools(tool_mode);
     let tools_json: Vec<Value> = tool_defs
         .iter()
         .map(|t| {
@@ -75,7 +83,12 @@ fn handle_tools_list(request: &JsonRpcRequest) -> Value {
 }
 
 /// Handle tools/call — dispatch to the appropriate tool handler.
-async fn handle_tools_call(pool: &SqlitePool, user_id: &str, request: &JsonRpcRequest) -> Value {
+async fn handle_tools_call(
+    pool: &SqlitePool,
+    user_id: &str,
+    request: &JsonRpcRequest,
+    tool_mode: &str,
+) -> Value {
     let tool_name = match request.params.get("name").and_then(|v| v.as_str()) {
         Some(name) => name,
         None => {
@@ -93,16 +106,19 @@ async fn handle_tools_call(pool: &SqlitePool, user_id: &str, request: &JsonRpcRe
         .cloned()
         .unwrap_or(json!({}));
 
-    match tools::dispatch(pool, user_id, tool_name, &arguments).await {
+    match tools::dispatch(pool, user_id, tool_name, &arguments, tool_mode).await {
         Ok(result) => {
-            let content = json!({
+            let mut content = json!({
                 "content": [{
                     "type": "text",
                     "text": serde_json::to_string_pretty(&result).unwrap_or_default()
                 }],
-                "structuredContent": result,
                 "isError": false
             });
+            // structuredContent must be an object per MCP spec
+            if result.is_object() {
+                content["structuredContent"] = result;
+            }
             serde_json::to_value(JsonRpcResponse::success(request.id.clone(), content)).unwrap()
         }
         Err(err) => {

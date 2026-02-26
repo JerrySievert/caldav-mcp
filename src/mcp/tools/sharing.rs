@@ -1,10 +1,11 @@
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sqlx::SqlitePool;
 
 use super::ToolDef;
 use crate::db::models::Permission;
 use crate::db::{shares, users};
 
+/// Return the MCP tool definitions for calendar sharing operations.
 pub fn tool_defs() -> Vec<ToolDef> {
     vec![
         ToolDef {
@@ -46,6 +47,7 @@ pub fn tool_defs() -> Vec<ToolDef> {
     ]
 }
 
+/// Share a calendar with another user, granting the specified access level.
 pub async fn share_calendar(
     pool: &SqlitePool,
     _user_id: &str,
@@ -74,6 +76,7 @@ pub async fn share_calendar(
     }))
 }
 
+/// Revoke a user's access to a shared calendar.
 pub async fn unshare_calendar(
     pool: &SqlitePool,
     _user_id: &str,
@@ -94,6 +97,7 @@ pub async fn unshare_calendar(
     Ok(json!({"unshared": true, "calendar_id": calendar_id, "username": username}))
 }
 
+/// List all calendars that have been shared with the authenticated user.
 pub async fn list_shared_calendars(
     pool: &SqlitePool,
     user_id: &str,
@@ -116,5 +120,5 @@ pub async fn list_shared_calendars(
         })
         .collect();
 
-    Ok(json!(result))
+    Ok(json!({ "shared_calendars": result }))
 }
